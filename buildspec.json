@@ -1,0 +1,8 @@
+{
+  "note": "Reference metadata only. setup-project.ps1 preserves dependency versions and hashes from the current official OBS plugin template.",
+  "name": "mugen-gamepad-overlay",
+  "displayName": "Mugen Gamepad Overlay",
+  "version": "0.8.0",
+  "author": "Mugen Art Lab",
+  "website": "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
+}

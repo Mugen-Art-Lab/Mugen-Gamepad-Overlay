@@ -1,0 +1,25 @@
+# Generated OBS template project and build output
+Mugen-Gamepad-Overlay/
+build/
+build_x64/
+dist/
+release/
+installer-payload/
+
+# IDE and OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.VC.db
+.DS_Store
+Thumbs.db
+
+# Compiled files
+*.dll
+*.exe
+*.pdb
+*.obj
+*.lib
+*.exp

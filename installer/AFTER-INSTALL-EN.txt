@@ -1,0 +1,14 @@
+Mugen Gamepad Overlay 0.8.0
+
+1. Start OBS Studio.
+2. Add a new source.
+3. Choose Mugen Gamepad Overlay.
+4. The built-in universal skin works without additional files.
+5. Input Overlay and GamepadViewer skins are downloaded separately.
+
+Documentation:
+https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay
+
+LICENSE
+Mugen Gamepad Overlay is free and open-source software under GNU GPL v2.0.
+The full license text is installed with the plugin.

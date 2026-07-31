@@ -1,0 +1,18 @@
+Mugen Gamepad Overlay uses the following third-party components.
+
+SDL 3.4.12
+Copyright (C) 1997-2026 Sam Lantinga and SDL contributors
+License: zlib License
+Source tag: release-3.4.12
+https://github.com/libsdl-org/SDL
+The Windows release links SDL statically into the plugin.
+Full license text: LICENSES/SDL3.txt
+
+NanoSVG
+Copyright (c) 2013-14 Mikko Mononen
+License: zlib License
+Source revision: 25241c5a8f8451d41ab1b02ab2d865b01600d949
+https://github.com/memononen/nanosvg
+Full license text: LICENSES/NanoSVG.txt
+
+Third-party Input Overlay and GamepadViewer skins are not bundled. Their authors and licenses remain independent from Mugen Gamepad Overlay.

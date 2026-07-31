@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible Mugen Gamepad Overlay problem
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to provide a reproducible report.
+  - type: input
+    id: obs
+    attributes:
+      label: OBS Studio version
+      placeholder: 32.x.x, Windows x64
+    validations:
+      required: true
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin version and installation method
+      placeholder: 0.8.0, installer / standard ZIP / portable ZIP
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+    validations:
+      required: true
+  - type: textarea
+    id: controller
+    attributes:
+      label: Controller and connection mode
+      description: Include USB/Bluetooth/receiver, XInput/DInput/Switch mode, Steam Input, DS4Windows, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: OBS log and screenshots
+      description: Attach the current OBS log and remove any private information first.
+    validations:
+      required: true
