@@ -1,12 +1,19 @@
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\setup-project.ps1"
+set "ROOT=%~dp0"
+set "WORKSPACE=%ROOT%build-workspace"
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%ROOT%tools\setup-project.ps1" -Destination "%WORKSPACE%"
 if errorlevel 1 (
   echo.
-  echo Project creation failed.
+  echo Workspace creation failed.
   pause
   exit /b 1
 )
+
 echo.
-echo The full project is in the Mugen-Gamepad-Overlay folder.
+echo The generated OBS plugin project is in:
+echo %WORKSPACE%
+echo.
+echo Run BUILD_WINDOWS.cmd from the repository root to build and package it.
 pause

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Mugen Art Lab
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$GeneratedProject,
@@ -9,10 +12,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$version = "0.8.0"
 $pluginName = "mugen-gamepad-overlay"
 $sourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $projectRoot = (Resolve-Path $GeneratedProject).Path
+$version = (Get-Content (Join-Path $sourceRoot "VERSION") -Raw).Trim()
 
 function Find-PluginDll {
     param([string]$Root, [string]$Config)
@@ -54,11 +57,21 @@ function Reset-Directory {
 function Copy-CommonDocuments {
     param([string]$Destination)
 
-    Copy-Item -LiteralPath (Join-Path $sourceRoot "LICENSE") -Destination (Join-Path $Destination "LICENSE.txt") -Force
-    Copy-Item -LiteralPath (Join-Path $sourceRoot "data\THIRD-PARTY-NOTICES.txt") -Destination $Destination -Force
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "README.md") -Destination $Destination -Force
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "README-RU.md") -Destination $Destination -Force
     Copy-Item -LiteralPath (Join-Path $sourceRoot "INSTALL.md") -Destination $Destination -Force
     Copy-Item -LiteralPath (Join-Path $sourceRoot "INSTALL-RU.md") -Destination $Destination -Force
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "CHANGELOG.md") -Destination $Destination -Force
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "AI-DISCLOSURE.md") -Destination $Destination -Force
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "SUPPORT.md") -Destination $Destination -Force
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "LICENSE") -Destination (Join-Path $Destination "LICENSE") -Force
     Copy-Item -LiteralPath (Join-Path $sourceRoot "LICENSES") -Destination (Join-Path $Destination "LICENSES") -Recurse -Force
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "docs") -Destination (Join-Path $Destination "docs") -Recurse -Force
+
+    $dataDestination = Join-Path $Destination "data"
+    New-Item -ItemType Directory -Path $dataDestination -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $sourceRoot "data\THIRD-PARTY-NOTICES.txt") -Destination $dataDestination -Force
 }
 
 function New-ZipFromDirectory {
@@ -76,68 +89,71 @@ if (-not (Test-Path -LiteralPath $localeSource)) {
 }
 
 $releaseRoot = Join-Path $projectRoot "release\$version"
-$stagingRoot = Join-Path $releaseRoot "staging"
-$standardStage = Join-Path $stagingRoot "standard"
-$portableStage = Join-Path $stagingRoot "portable"
-$payloadStage = Join-Path $releaseRoot "installer-payload"
+$workRoot = Join-Path $projectRoot "release-work\$version"
+$standardStage = Join-Path $workRoot "standard"
+$portableStage = Join-Path $workRoot "portable"
+$payloadStage = Join-Path $workRoot "installer-payload"
 
 Reset-Directory $releaseRoot
-New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null
+Reset-Directory $workRoot
 
-# Recommended ProgramData layout.
-$standardPlugin = Join-Path $standardStage $pluginName
-New-Item -ItemType Directory -Path (Join-Path $standardPlugin "bin\64bit") -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $standardPlugin "data\locale") -Force | Out-Null
-Copy-Item -LiteralPath $dll -Destination (Join-Path $standardPlugin "bin\64bit\mugen-gamepad-overlay.dll") -Force
-Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $standardPlugin "data\locale") -Force
-Copy-CommonDocuments -Destination $standardStage
+try {
+    # Standard all-users layout: extract the ZIP into ProgramData\obs-studio\plugins.
+    $standardPlugin = Join-Path $standardStage $pluginName
+    New-Item -ItemType Directory -Path (Join-Path $standardPlugin "bin\64bit") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $standardPlugin "data\locale") -Force | Out-Null
+    Copy-Item -LiteralPath $dll -Destination (Join-Path $standardPlugin "bin\64bit\mugen-gamepad-overlay.dll") -Force
+    Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $standardPlugin "data\locale") -Force
+    Copy-CommonDocuments -Destination $standardPlugin
 
-# Portable/custom OBS layout.
-New-Item -ItemType Directory -Path (Join-Path $portableStage "obs-plugins\64bit") -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $portableStage "data\obs-plugins\$pluginName\locale") -Force | Out-Null
-Copy-Item -LiteralPath $dll -Destination (Join-Path $portableStage "obs-plugins\64bit\mugen-gamepad-overlay.dll") -Force
-Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $portableStage "data\obs-plugins\$pluginName\locale") -Force
-Copy-CommonDocuments -Destination $portableStage
+    # Portable/custom OBS layout: extract the ZIP into the OBS root directory.
+    $portableData = Join-Path $portableStage "data\obs-plugins\$pluginName"
+    New-Item -ItemType Directory -Path (Join-Path $portableStage "obs-plugins\64bit") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $portableData "locale") -Force | Out-Null
+    Copy-Item -LiteralPath $dll -Destination (Join-Path $portableStage "obs-plugins\64bit\mugen-gamepad-overlay.dll") -Force
+    Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $portableData "locale") -Force
+    Copy-CommonDocuments -Destination $portableData
 
-# Installer payload mirrors the recommended ProgramData plugin folder.
-$payloadPlugin = Join-Path $payloadStage $pluginName
-New-Item -ItemType Directory -Path (Join-Path $payloadPlugin "bin\64bit") -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $payloadPlugin "data\locale") -Force | Out-Null
-Copy-Item -LiteralPath $dll -Destination (Join-Path $payloadPlugin "bin\64bit\mugen-gamepad-overlay.dll") -Force
-Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $payloadPlugin "data\locale") -Force
-Copy-Item -LiteralPath (Join-Path $sourceRoot "LICENSE") -Destination (Join-Path $payloadPlugin "LICENSE.txt") -Force
-Copy-Item -LiteralPath (Join-Path $sourceRoot "data\THIRD-PARTY-NOTICES.txt") -Destination $payloadPlugin -Force
-Copy-Item -LiteralPath (Join-Path $sourceRoot "LICENSES") -Destination (Join-Path $payloadPlugin "LICENSES") -Recurse -Force
+    # Installer payload mirrors the recommended ProgramData plugin folder.
+    $payloadPlugin = Join-Path $payloadStage $pluginName
+    New-Item -ItemType Directory -Path (Join-Path $payloadPlugin "bin\64bit") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $payloadPlugin "data\locale") -Force | Out-Null
+    Copy-Item -LiteralPath $dll -Destination (Join-Path $payloadPlugin "bin\64bit\mugen-gamepad-overlay.dll") -Force
+    Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $payloadPlugin "data\locale") -Force
+    Copy-CommonDocuments -Destination $payloadPlugin
 
-$standardZip = Join-Path $releaseRoot "Mugen-Gamepad-Overlay-$version-Windows-x64.zip"
-$portableZip = Join-Path $releaseRoot "Mugen-Gamepad-Overlay-$version-Windows-x64-portable.zip"
-New-ZipFromDirectory -SourceDirectory $standardStage -ZipPath $standardZip
-New-ZipFromDirectory -SourceDirectory $portableStage -ZipPath $portableZip
+    $standardZip = Join-Path $releaseRoot "Mugen-Gamepad-Overlay-$version-Windows-x64.zip"
+    $portableZip = Join-Path $releaseRoot "Mugen-Gamepad-Overlay-$version-Windows-x64-portable.zip"
+    New-ZipFromDirectory -SourceDirectory $standardStage -ZipPath $standardZip
+    New-ZipFromDirectory -SourceDirectory $portableStage -ZipPath $portableZip
 
-if ($BuildInstallerIfAvailable) {
-    & (Join-Path $sourceRoot "installer\build-installer.ps1") -PayloadRoot $payloadStage -OutputDir $releaseRoot
-    if ($LASTEXITCODE -ne 0) {
-        throw "Installer build failed with code $LASTEXITCODE"
+    if ($BuildInstallerIfAvailable) {
+        & (Join-Path $sourceRoot "installer\build-installer.ps1") -PayloadRoot $payloadStage -OutputDir $releaseRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw "Installer build failed with code $LASTEXITCODE"
+        }
+    }
+
+    $assets = Get-ChildItem -LiteralPath $releaseRoot -File |
+        Where-Object { $_.Extension -in @(".zip", ".exe") } |
+        Sort-Object Name
+
+    $hashLines = foreach ($asset in $assets) {
+        $hash = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+        "$hash  $($asset.Name)"
+    }
+    $hashLines | Set-Content -LiteralPath (Join-Path $releaseRoot "SHA256SUMS.txt") -Encoding ASCII
+
+    Write-Host ""
+    Write-Host "Release packages:" -ForegroundColor Green
+    $assets | ForEach-Object { Write-Host "  $($_.FullName)" }
+    if (-not ($assets | Where-Object { $_.Extension -eq ".exe" })) {
+        Write-Host "  Installer was not built. Install Inno Setup 6 and run BUILD_WINDOWS.cmd again." -ForegroundColor Yellow
+    }
+    Write-Host "  $(Join-Path $releaseRoot 'SHA256SUMS.txt')"
+}
+finally {
+    if (Test-Path -LiteralPath $workRoot) {
+        Remove-Item -LiteralPath $workRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
-
-$assets = Get-ChildItem -LiteralPath $releaseRoot -File |
-    Where-Object { $_.Extension -in @(".zip", ".exe") } |
-    Sort-Object Name
-
-$hashLines = foreach ($asset in $assets) {
-    $hash = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-    "$hash  $($asset.Name)"
-}
-$hashLines | Set-Content -LiteralPath (Join-Path $releaseRoot "SHA256SUMS.txt") -Encoding ASCII
-
-Write-Host ""
-Write-Host "Release packages:" -ForegroundColor Green
-Write-Host "  $standardZip"
-Write-Host "  $portableZip"
-if (Get-ChildItem -LiteralPath $releaseRoot -Filter "*.exe" -File -ErrorAction SilentlyContinue) {
-    Get-ChildItem -LiteralPath $releaseRoot -Filter "*.exe" -File | ForEach-Object { Write-Host "  $($_.FullName)" }
-} else {
-    Write-Host "  Installer was not built. Install Inno Setup 6 and rerun installer\build-installer.ps1." -ForegroundColor Yellow
-}
-Write-Host "  $(Join-Path $releaseRoot 'SHA256SUMS.txt')"

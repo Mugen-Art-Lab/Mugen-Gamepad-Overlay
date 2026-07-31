@@ -1,9 +1,5 @@
-/*
- * Mugen Gamepad Overlay
- * Copyright (C) 2026 Mugen Art Lab
- *
- * GPL-2.0-or-later
- */
+// SPDX-FileCopyrightText: 2026 Mugen Art Lab
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL3/SDL.h>
@@ -11,6 +7,10 @@
 #include <obs-module.h>
 
 #include "gamepad_source.hpp"
+
+#ifndef MUGEN_GAMEPAD_OVERLAY_VERSION
+#define MUGEN_GAMEPAD_OVERLAY_VERSION "development"
+#endif
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("mugen-gamepad-overlay", "en-US")
@@ -35,7 +35,7 @@ bool obs_module_load(void)
     SDL_SetGamepadEventsEnabled(false);
 
     obs_register_source(&mugen::gamepad_source_info);
-    blog(LOG_INFO, "[Mugen Gamepad Overlay] Loaded (0.8.0)");
+    blog(LOG_INFO, "[Mugen Gamepad Overlay] Loaded (%s)", MUGEN_GAMEPAD_OVERLAY_VERSION);
     return true;
 }
 

@@ -10,5 +10,5 @@ Mugen Gamepad Overlay 0.8.0
 https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay
 
 ЛИЦЕНЗИЯ
-Mugen Gamepad Overlay — свободное программное обеспечение с открытым исходным кодом под лицензией GNU GPL v2.0.
+Mugen Gamepad Overlay — свободное программное обеспечение с открытым исходным кодом под лицензией GNU GPL-2.0-or-later.
 Полный текст лицензии устанавливается вместе с плагином.

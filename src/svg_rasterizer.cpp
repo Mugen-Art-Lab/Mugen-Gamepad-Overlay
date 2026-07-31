@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Mugen Art Lab
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "svg_rasterizer.hpp"
 
 #define NANOSVG_IMPLEMENTATION

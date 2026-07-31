@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Mugen Art Lab
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 param(
     [ValidateSet("Debug", "RelWithDebInfo", "Release", "MinSizeRel")]
     [string]$Configuration = "Release"
@@ -5,6 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$version = (Get-Content (Join-Path $projectRoot "VERSION") -Raw).Trim()
 Set-Location $projectRoot
 
 function Find-CMakeExecutable {
@@ -66,7 +70,7 @@ function Find-VisualStudioCppInstallation {
 if (-not (Test-Path "cmake/common/bootstrap.cmake")) {
     Write-Host ""
     Write-Host "This is the compact source folder, not the generated OBS project." -ForegroundColor Red
-    Write-Host "Run CREATE_PROJECT.cmd first. Then run BUILD_WINDOWS.cmd again from either folder." -ForegroundColor Yellow
+    Write-Host "Run CREATE_PROJECT.cmd first. Then run BUILD_WINDOWS.cmd again from the repository root." -ForegroundColor Yellow
     exit 10
 }
 
@@ -151,4 +155,4 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-Host "Done. Release files are under:" -ForegroundColor Green
-Write-Host (Join-Path $projectRoot "release\0.8.0")
+Write-Host (Join-Path $projectRoot "release\$version")

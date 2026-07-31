@@ -1,5 +1,10 @@
+; SPDX-FileCopyrightText: 2026 Mugen Art Lab
+; SPDX-License-Identifier: GPL-2.0-or-later
+
 #define MyAppName "Mugen Gamepad Overlay"
-#define MyAppVersion "0.8.0"
+#ifndef MyAppVersion
+  #define MyAppVersion "0.8.0"
+#endif
 #define MyAppPublisher "Mugen Art Lab"
 #define MyAppURL "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
 #define MyPluginName "mugen-gamepad-overlay"

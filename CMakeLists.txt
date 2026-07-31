@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Mugen Art Lab
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 cmake_minimum_required(VERSION 3.28...3.31)
 
 # This CMakeLists.txt is designed to replace the root CMakeLists.txt in the
@@ -95,7 +98,12 @@ target_sources(
 )
 
 target_compile_features(${CMAKE_PROJECT_NAME} PRIVATE cxx_std_20)
-target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE SDL_MAIN_HANDLED=1)
+target_compile_definitions(
+  ${CMAKE_PROJECT_NAME}
+  PRIVATE
+    SDL_MAIN_HANDLED=1
+    MUGEN_GAMEPAD_OVERLAY_VERSION="${_version}"
+)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "${nanosvg_SOURCE_DIR}/src")
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs SDL3::SDL3-static)
 

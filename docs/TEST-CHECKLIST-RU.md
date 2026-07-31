@@ -5,14 +5,17 @@
 ## 1. Сборка и установка
 
 1. Полностью закройте OBS и убедитесь, что `obs64.exe` исчез из Диспетчера задач.
-2. Запустите `PATCH_EXISTING_PROJECT_AND_BUILD.cmd`.
-3. Выберите прежнюю рабочую папку `Mugen-Gamepad-Overlay` с `build_x64`.
-4. Установите полученный ZIP поверх предыдущей тестовой версии.
+2. Запустите `BUILD_WINDOWS.cmd` из корня репозитория.
+3. Дождитесь сборки конфигурации `Release` и упаковки файлов.
+4. Установите полученный Setup.exe либо стандартный ZIP поверх предыдущей версии.
 5. Запустите OBS и откройте существующий источник.
 
-Ожидаемый архив сборки:
+Ожидаемые публичные файлы находятся в `build-workspace\release\0.8.0`:
 
-`Mugen-Gamepad-Overlay-0.8.0-windows-x64-RelWithDebInfo.zip`
+- `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-Setup.exe`;
+- `Mugen-Gamepad-Overlay-0.8.0-Windows-x64.zip`;
+- `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-portable.zip`;
+- `SHA256SUMS.txt`.
 
 
 ## 2. Живое обновление списка геймпадов

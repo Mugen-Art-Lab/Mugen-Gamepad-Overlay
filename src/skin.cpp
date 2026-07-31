@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Mugen Art Lab
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "skin.hpp"
 
 #include <obs-module.h>

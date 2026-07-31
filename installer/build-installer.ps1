@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Mugen Art Lab
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$PayloadRoot,
@@ -8,6 +11,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$version = (Get-Content (Join-Path $repoRoot "VERSION") -Raw).Trim()
 $payload = (Resolve-Path $PayloadRoot).Path
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 $output = (Resolve-Path $OutputDir).Path
@@ -42,5 +46,5 @@ if (-not $iscc) {
 
 $script = Join-Path $PSScriptRoot "Mugen-Gamepad-Overlay.iss"
 Write-Host "Building installer with: $iscc"
-& $iscc "/DPayloadRoot=$payload" "/DOutputDir=$output" "/DRepoRoot=$repoRoot" $script
+& $iscc "/DMyAppVersion=$version" "/DPayloadRoot=$payload" "/DOutputDir=$output" "/DRepoRoot=$repoRoot" $script
 exit $LASTEXITCODE

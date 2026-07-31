@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Mugen Art Lab
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "gamepad_source.hpp"
 #include "preset_variants.hpp"
 

@@ -1,10 +1,12 @@
-# Generated OBS template project and build output
-Mugen-Gamepad-Overlay/
+# Generated OBS template workspace and build output
+build-workspace/
 build/
 build_x64/
 dist/
 release/
+release-work/
 installer-payload/
+staging/
 
 # IDE and OS
 .vs/

@@ -1,10 +1,24 @@
 # Mugen Gamepad Overlay 0.8.0
 
+[English README](README.md)
+
 Локальный нативный источник отображения геймпада для OBS Studio под Windows.
 
 Mugen Gamepad Overlay получает ввод через SDL3 и отрисовывает его прямо внутри OBS Studio. Для работы не нужны браузерный источник, сайт, WebSocket-сервер или передача ввода через интернет.
 
-![DualSense через Input Overlay](docs/images/input-overlay-dualsense.png)
+![Встроенная раскладка PlayStation](docs/images/universal-playstation.png)
+
+## Требования
+
+- Windows 10 или Windows 11, x64;
+- OBS Studio x64;
+- контроллер, который SDL представляет как Gamepad.
+
+## Скачать
+
+Готовые файлы находятся во вложениях к последнему [релизу GitHub](https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/releases). Для обычной OBS рекомендуется установщик. Также выпускаются стандартный ZIP и отдельный ZIP для portable OBS.
+
+Автоматические архивы **Source code**, создаваемые GitHub, содержат исходники проекта, а не готовый к установке плагин.
 
 ## Основные возможности
 
@@ -13,7 +27,7 @@ Mugen Gamepad Overlay получает ввод через SDL3 и отрисо�
 - локальные скины GamepadViewer `CSS + SVG/PNG/JPEG` без браузера и JavaScript;
 - стики, L3/R3, крестовина, плечи, аналоговые триггеры, Guide/Home, Capture/Misc и щелчок тачпада, когда контроллер их предоставляет;
 - автоматические или ручные обозначения Xbox, PlayStation и Nintendo;
-- живое обновление списка при подключении и отключении контроллеров;
+- живое обновление при подключении и отключении контроллеров в открытом окне свойств;
 - расширенное переназначение кнопок и источников триггеров через SDL и Raw button/hat/axis;
 - понятные двуязычные плашки ошибок при отсутствии или повреждении файлов скина;
 - хоткей включения и выключения отдельного источника.
@@ -28,24 +42,23 @@ Mugen Gamepad Overlay получает ввод через SDL3 и отрисо�
 2. Запустите `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-Setup.exe`.
 3. Запустите OBS Studio и добавьте источник **Mugen Gamepad Overlay**.
 
-Установщик использует рекомендуемую общую папку плагинов:
+Установщик использует общую папку плагинов:
 
 `C:\ProgramData\obs-studio\plugins\mugen-gamepad-overlay`
 
-### Ручные ZIP-архивы
-
-Для обычной установки предназначен стандартный ZIP, для portable или нестандартной папки OBS — отдельный portable ZIP. Точные пути и удаление описаны в [INSTALL-RU.md](INSTALL-RU.md).
+Ручная и portable-установка, обновление, удаление и диагностика описаны в [INSTALL-RU.md](INSTALL-RU.md).
 
 ## Источники скинов
 
-Сторонние скины в архив не входят.
+Сторонние скины в проект не входят.
 
-- GamepadViewer: вручную проверена коллекция `frolovlife/gamepadviewer-skins`.
+- GamepadViewer: вручную проверена коллекция [`frolovlife/gamepadviewer-skins`](https://github.com/frolovlife/gamepadviewer-skins).
 - Input Overlay: проверены игровые пресеты Input Overlay 5.0.5.
 
 Импортированная графика сохраняет собственные подписи и лицензии. Выбор обозначений в плагине меняет только встроенный скин и интерфейс переназначения.
 
-![Скин DualShock 2 из GamepadViewer](docs/images/gamepadviewer-dualshock2.png)
+
+Подробнее: [источники скинов](docs/SKIN-SOURCES-RU.md) и [совместимость GamepadViewer](docs/GAMEPADVIEWER-COMPATIBILITY-RU.md).
 
 ## Определение контроллеров
 
@@ -53,7 +66,7 @@ Mugen Gamepad Overlay получает ввод через SDL3 и отрисо�
 
 На реальных устройствах проверены DualSense, Xbox-совместимые контроллеры, Flydigi Vader 2 Pro через USB и приёмник, 8BitDo M30 в нескольких режимах, SVEN X-PAD и Flipper Zero в режиме USB Game Controller. Специализированные Raw Joystick/HOTAS не входят в область 0.8.0.
 
-Подробности: [docs/CONTROLLER-DETECTION-RU.md](docs/CONTROLLER-DETECTION-RU.md).
+Подробнее: [как плагин видит контроллер](docs/CONTROLLER-DETECTION-RU.md).
 
 ## Известные ограничения
 
@@ -62,6 +75,21 @@ Mugen Gamepad Overlay получает ввод через SDL3 и отрисо�
 - произвольный браузерный CSS, JavaScript, HTML, удалённые ресурсы и CSS-анимации не гарантируются;
 - старые Input Overlay INI и RetroArch CFG не поддерживаются;
 - возможен физический щелчок тачпада, но не координаты касаний и жесты.
+
+## Сборка из исходников
+
+В репозитории хранится компактная часть проекта, относящаяся непосредственно к плагину. `BUILD_WINDOWS.cmd` создаёт игнорируемую рабочую папку на основе зафиксированной ревизии официального шаблона OBS, собирает конфигурацию Windows x64 Release и подготавливает установщик и ZIP-архивы.
+
+Требования и точный порядок описаны в [BUILDING-RU.md](docs/BUILDING-RU.md).
+
+## Карта репозитория
+
+- `src/` — нативный плагин и движки скинов;
+- `data/` — локализация OBS и уведомления о сторонних компонентах;
+- `installer/` — исходник установщика Inno Setup;
+- `tools/` — скрипты рабочей папки, сборки и упаковки релиза;
+- `docs/` — документация по совместимости, сборке и тестированию;
+- `qa-tests/` — небольшие ручные тестовые стенды, которые не устанавливаются вместе с плагином.
 
 ## Конфиденциальность
 
@@ -75,13 +103,9 @@ Mugen Gamepad Overlay разработан Mugen Art Lab при существе
 
 ## Ошибки и поддержка
 
-Воспроизводимые ошибки можно сообщать через Issues:
+Воспроизводимые ошибки можно сообщать через [Issues](https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues). Что приложить к сообщению, описано в [SUPPORT.md](SUPPORT.md).
 
-https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues
-
-Mugen Gamepad Overlay бесплатен и имеет открытый исходный код. Ссылки на необязательную поддержку размещены в профиле Mugen Art Lab:
-
-https://github.com/Mugen-Art-Lab
+Mugen Gamepad Overlay бесплатен и имеет открытый исходный код. Ссылки на необязательную поддержку размещены в [профиле Mugen Art Lab](https://github.com/Mugen-Art-Lab).
 
 ## Лицензия
 
