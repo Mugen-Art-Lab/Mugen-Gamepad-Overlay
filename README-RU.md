@@ -2,6 +2,8 @@
 
 [English README](README.md)
 
+![Mugen Gamepad Overlay](docs/images/mugen-gamepad-overlay.png)
+
 Локальный нативный источник отображения геймпада для OBS Studio под Windows.
 
 Mugen Gamepad Overlay получает ввод через SDL3 и отрисовывает его прямо внутри OBS Studio. Для работы не нужны браузерный источник, сайт, WebSocket-сервер или передача ввода через интернет.
