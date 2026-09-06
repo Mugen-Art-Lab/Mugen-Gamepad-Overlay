@@ -2,7 +2,7 @@
 
 [Русская версия](FIRST-TEST-RU.md)
 
-1. Close OBS Studio completely and run `BUILD_WINDOWS.cmd`.
+1. Close OBS Studio completely and run `BUILD_WINDOWS.cmd` or use **Actions → Windows Release Build** for a clean remote build.
 2. Install the generated Setup executable or standard ZIP.
 3. Verify automatic labels: DualSense should use `✕ / ○ / □ / △`; an Xbox-compatible controller should use `A / B / X / Y`.
 4. Manually switch Xbox, PlayStation, and Nintendo labels and check the built-in skin and advanced mapping labels.
