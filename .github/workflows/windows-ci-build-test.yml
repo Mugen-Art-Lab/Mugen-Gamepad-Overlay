@@ -1,0 +1,80 @@
+name: Windows CI Build Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build Windows x64 release assets
+    runs-on: windows-2022
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Create generated OBS build workspace
+        shell: pwsh
+        run: |
+          $buildWorkspace = Join-Path $env:RUNNER_TEMP "mugen-gamepad-overlay-build"
+          "BUILD_WORKSPACE=$buildWorkspace" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\setup-project.ps1" -Destination "$buildWorkspace"
+
+      - name: Build and package Release
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:BUILD_WORKSPACE\tools\build-windows.ps1" -Configuration Release
+
+      - name: Validate release assets
+        shell: pwsh
+        run: |
+          $version = (Get-Content ".\VERSION" -Raw).Trim()
+          $releaseDir = Join-Path $env:BUILD_WORKSPACE "release\$version"
+          $expected = @(
+            "Mugen-Gamepad-Overlay-$version-Windows-x64.zip",
+            "Mugen-Gamepad-Overlay-$version-Windows-x64-portable.zip",
+            "Mugen-Gamepad-Overlay-$version-Windows-x64-Setup.exe",
+            "SHA256SUMS.txt"
+          )
+
+          foreach ($name in $expected) {
+            $path = Join-Path $releaseDir $name
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Expected release asset is missing: $path"
+            }
+          }
+
+          $checksumFile = Join-Path $releaseDir "SHA256SUMS.txt"
+          foreach ($line in Get-Content -LiteralPath $checksumFile) {
+            if ($line -notmatch '^([0-9a-f]{64})  (.+)$') {
+              throw "Invalid SHA256SUMS line: $line"
+            }
+            $expectedHash = $Matches[1]
+            $fileName = $Matches[2]
+            $filePath = Join-Path $releaseDir $fileName
+            if (-not (Test-Path -LiteralPath $filePath)) {
+              throw "Checksum references a missing file: $fileName"
+            }
+            $actualHash = (Get-FileHash -LiteralPath $filePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($actualHash -ne $expectedHash) {
+              throw "Checksum mismatch for $fileName"
+            }
+          }
+
+          Write-Host "Validated release assets:" -ForegroundColor Green
+          Get-ChildItem -LiteralPath $releaseDir -File | Sort-Object Name | Format-Table Name, Length
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mugen-Gamepad-Overlay-Windows-x64-${{ github.sha }}
+          path: ${{ env.BUILD_WORKSPACE }}\release\**\*
+          if-no-files-found: error
+          retention-days: 7
