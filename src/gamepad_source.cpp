@@ -14,6 +14,14 @@
 #include <utility>
 #include <vector>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
 namespace mugen {
 namespace {
 
@@ -32,6 +40,8 @@ constexpr size_t kRightTriggerIndex = 1;
 constexpr const char *kInputOverlayAutoVariant = "__auto__";
 constexpr const char *kInputOverlayManualVariant = "__manual__";
 constexpr float kDeviceListScanInterval = 0.5F;
+constexpr const char *kProjectUrl = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay";
+constexpr const char *kMugenArtLabUrl = "https://github.com/Mugen-Art-Lab";
 
 bool string_equals(const char *value, const char *expected)
 {
@@ -665,6 +675,28 @@ bool state_equal(const GamepadState &a, const GamepadState &b)
            nearly_equal(a.right_trigger, b.right_trigger);
 }
 
+bool open_external_url(const char *url)
+{
+#if defined(_WIN32)
+    const HINSTANCE result = ShellExecuteA(nullptr, "open", url, nullptr, nullptr, SW_SHOWNORMAL);
+    if (reinterpret_cast<INT_PTR>(result) <= 32)
+        blog(LOG_WARNING, "[Mugen Gamepad Overlay] Could not open URL: %s", url);
+#else
+    blog(LOG_WARNING, "[Mugen Gamepad Overlay] Opening external URLs is not supported on this platform: %s", url);
+#endif
+    return false;
+}
+
+bool open_project_page(obs_properties_t *, obs_property_t *, void *)
+{
+    return open_external_url(kProjectUrl);
+}
+
+bool open_mugen_art_lab(obs_properties_t *, obs_property_t *, void *)
+{
+    return open_external_url(kMugenArtLabUrl);
+}
+
 } // namespace
 
 GamepadSource::GamepadSource(obs_data_t *settings, obs_source_t *source) : source_(source)
@@ -861,6 +893,17 @@ obs_properties_t *GamepadSource::properties(void *data)
     }
     obs_properties_add_group(properties, "advanced_mapping", obs_module_text("AdvancedMapping"),
                              OBS_GROUP_NORMAL, mapping);
+
+    obs_properties_t *about = obs_properties_create();
+    const std::string about_info =
+        std::string("Mugen Gamepad Overlay ") + MUGEN_GAMEPAD_OVERLAY_VERSION + "\n" +
+        obs_module_text("About.ProjectBy") + "\n" + obs_module_text("About.FreeSoftware");
+    obs_properties_add_text(about, "about_info", about_info.c_str(), OBS_TEXT_INFO);
+    obs_properties_add_button2(about, "about_project_page", obs_module_text("About.ProjectPage"),
+                               open_project_page, nullptr);
+    obs_properties_add_button2(about, "about_mugen_art_lab", obs_module_text("About.MugenArtLab"),
+                               open_mugen_art_lab, nullptr);
+    obs_properties_add_group(properties, "about", obs_module_text("About"), OBS_GROUP_NORMAL, about);
 
     GamepadSource *source = static_cast<GamepadSource *>(data);
     if (source && source->source_) {

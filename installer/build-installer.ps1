@@ -44,7 +44,26 @@ if (-not $iscc) {
     exit 0
 }
 
+$generatedInfoDir = Join-Path $output "installer-info"
+New-Item -ItemType Directory -Path $generatedInfoDir -Force | Out-Null
+$infoEn = Join-Path $generatedInfoDir "AFTER-INSTALL-EN.txt"
+$infoRu = Join-Path $generatedInfoDir "AFTER-INSTALL-RU.txt"
+
+function Write-VersionedInfo([string]$Source, [string]$Destination) {
+    # Windows PowerShell 5.1 otherwise treats UTF-8 without BOM as ANSI.
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false, $true)
+    $text = [System.IO.File]::ReadAllText($Source, $utf8NoBom)
+    $text = $text.Replace("@VERSION@", $version)
+    $utf8Bom = [System.Text.UTF8Encoding]::new($true)
+    [System.IO.File]::WriteAllText($Destination, $text, $utf8Bom)
+}
+
+Write-VersionedInfo (Join-Path $PSScriptRoot "AFTER-INSTALL-EN.txt") $infoEn
+Write-VersionedInfo (Join-Path $PSScriptRoot "AFTER-INSTALL-RU.txt") $infoRu
+
 $script = Join-Path $PSScriptRoot "Mugen-Gamepad-Overlay.iss"
 Write-Host "Building installer with: $iscc"
-& $iscc "/DMyAppVersion=$version" "/DPayloadRoot=$payload" "/DOutputDir=$output" "/DRepoRoot=$repoRoot" $script
-exit $LASTEXITCODE
+& $iscc "/DMyAppVersion=$version" "/DPayloadRoot=$payload" "/DOutputDir=$output" "/DRepoRoot=$repoRoot" "/DInfoAfterEN=$infoEn" "/DInfoAfterRU=$infoRu" $script
+$code = $LASTEXITCODE
+Remove-Item -LiteralPath $generatedInfoDir -Recurse -Force -ErrorAction SilentlyContinue
+exit $code

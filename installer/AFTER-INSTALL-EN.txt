@@ -1,4 +1,4 @@
-Mugen Gamepad Overlay 0.8.0
+Mugen Gamepad Overlay @VERSION@
 
 1. Start OBS Studio.
 2. Add a new source.

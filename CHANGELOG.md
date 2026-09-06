@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.1 — project attribution and release metadata
+
+- Added an About section to source properties with the current plugin version and Mugen Art Lab attribution.
+- Added buttons for the Mugen Gamepad Overlay repository and the Mugen Art Lab organization page.
+- Installer post-install information now receives the release version automatically from `VERSION`.
+- No changes to controller input, skin rendering, or existing source settings.
+
 ## 0.8.0 — first public release
 
 - Native local SDL3 controller input source for OBS Studio on Windows x64.

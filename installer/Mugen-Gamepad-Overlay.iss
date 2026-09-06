@@ -3,7 +3,7 @@
 
 #define MyAppName "Mugen Gamepad Overlay"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.8.0"
+  #define MyAppVersion "0.8.1"
 #endif
 #define MyAppPublisher "Mugen Art Lab"
 #define MyAppURL "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
@@ -53,8 +53,8 @@ VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"; InfoAfterFile: "{#RepoRoot}\installer\AFTER-INSTALL-EN.txt"
-Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"; InfoAfterFile: "{#RepoRoot}\installer\AFTER-INSTALL-RU.txt"
+Name: "english"; MessagesFile: "compiler:Default.isl"; InfoAfterFile: "{#InfoAfterEN}"
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"; InfoAfterFile: "{#InfoAfterRU}"
 
 [Messages]
 english.SelectLanguageTitle=Select setup language / Выберите язык установки

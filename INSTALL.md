@@ -5,7 +5,7 @@
 ## Recommended installer
 
 1. Close OBS Studio completely.
-2. Run `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-Setup.exe`.
+2. Run `Mugen-Gamepad-Overlay-0.8.1-Windows-x64-Setup.exe`.
 3. Accept the Windows administrator prompt.
 4. Start OBS Studio.
 5. Add a source and choose **Mugen Gamepad Overlay**.
@@ -20,7 +20,7 @@ To update, close OBS Studio and run the newer installer. Existing source setting
 
 ## Standard manual ZIP
 
-Extract the contents of `Mugen-Gamepad-Overlay-0.8.0-Windows-x64.zip` into:
+Extract the contents of `Mugen-Gamepad-Overlay-0.8.1-Windows-x64.zip` into:
 
 `C:\ProgramData\obs-studio\plugins`
 
@@ -32,7 +32,7 @@ To remove a manual installation, close OBS Studio and delete the `mugen-gamepad-
 
 ## Portable/custom OBS ZIP
 
-Close OBS Studio, then extract `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-portable.zip` into the root folder of the portable/custom OBS installation. The archive contains `obs-plugins` and `data` folders.
+Close OBS Studio, then extract `Mugen-Gamepad-Overlay-0.8.1-Windows-x64-portable.zip` into the root folder of the portable/custom OBS installation. The archive contains `obs-plugins` and `data` folders.
 
 To remove it manually, delete:
 

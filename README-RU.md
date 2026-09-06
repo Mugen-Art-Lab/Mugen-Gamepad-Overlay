@@ -1,4 +1,4 @@
-# Mugen Gamepad Overlay 0.8.0
+# Mugen Gamepad Overlay 0.8.1
 
 [English README](README.md)
 
@@ -41,7 +41,7 @@ Mugen Gamepad Overlay получает ввод через SDL3 и отрисо�
 ### Установщик — рекомендуется
 
 1. Полностью закройте OBS Studio.
-2. Запустите `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-Setup.exe`.
+2. Запустите `Mugen-Gamepad-Overlay-0.8.1-Windows-x64-Setup.exe`.
 3. Запустите OBS Studio и добавьте источник **Mugen Gamepad Overlay**.
 
 Установщик использует общую папку плагинов:
@@ -66,13 +66,13 @@ Mugen Gamepad Overlay получает ввод через SDL3 и отрисо�
 
 Автоматические подписи используют тип и раскладку, которые Windows и SDL сообщили плагину. Они могут отличаться от надписей на физическом корпусе из-за Bluetooth/XInput/DInput-режима, драйвера, Steam Input, DS4Windows, адаптера или виртуального контроллера.
 
-На реальных устройствах проверены DualSense, Xbox-совместимые контроллеры, Flydigi Vader 2 Pro через USB и приёмник, 8BitDo M30 в нескольких режимах, SVEN X-PAD и Flipper Zero в режиме USB Game Controller. Специализированные Raw Joystick/HOTAS не входят в область 0.8.0.
+На реальных устройствах проверены DualSense, Xbox-совместимые контроллеры, Flydigi Vader 2 Pro через USB и приёмник, 8BitDo M30 в нескольких режимах, SVEN X-PAD и Flipper Zero в режиме USB Game Controller. Специализированные Raw Joystick/HOTAS не входят в область 0.8.1.
 
 Подробнее: [как плагин видит контроллер](docs/CONTROLLER-DETECTION-RU.md).
 
 ## Известные ограничения
 
-- в 0.8.0 выпускается только Windows x64;
+- в 0.8.1 выпускается только Windows x64;
 - Raw SDL Joystick/HOTAS не поддерживаются, если SDL не представляет устройство как Gamepad;
 - произвольный браузерный CSS, JavaScript, HTML, удалённые ресурсы и CSS-анимации не гарантируются;
 - старые Input Overlay INI и RetroArch CFG не поддерживаются;

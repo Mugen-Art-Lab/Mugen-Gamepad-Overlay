@@ -107,6 +107,10 @@ target_compile_definitions(
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "${nanosvg_SOURCE_DIR}/src")
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs SDL3::SDL3-static)
 
+if(WIN32)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE shell32)
+endif()
+
 if(MSVC)
   target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE /W4 /permissive- /EHsc /utf-8)
   # NanoSVG expands its C implementation inside this translation unit. Keep
