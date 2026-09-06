@@ -31,4 +31,4 @@ The built-in skin shows a normalized modern layout. A specialized GamepadViewer 
 
 ## Unsupported legacy joysticks
 
-Windows may list a device in `joy.cpl` while SDL does not classify it as a normalized Gamepad. Such `Generic USB Joystick` devices do not appear in Mugen Gamepad Overlay 0.8.0. A general raw-Joystick mode is a separate future design problem.
+Windows may list a device in `joy.cpl` while SDL does not classify it as a normalized Gamepad. Such `Generic USB Joystick` devices do not appear in the current 0.8.x line of Mugen Gamepad Overlay. A general raw-Joystick mode is a separate future design problem.
