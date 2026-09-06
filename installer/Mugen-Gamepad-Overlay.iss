@@ -3,7 +3,7 @@
 
 #define MyAppName "Mugen Gamepad Overlay"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.8.1"
+  #error MyAppVersion is required. Use installer\build-installer.ps1.
 #endif
 #define MyAppPublisher "Mugen Art Lab"
 #define MyAppURL "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"

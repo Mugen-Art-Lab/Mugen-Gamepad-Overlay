@@ -59,7 +59,6 @@ Third-party skins are not bundled with this project.
 
 Imported artwork keeps its own labels and licensing. The built-in label selector changes only the universal skin and the mapping interface.
 
-
 More information: [skin sources](docs/SKIN-SOURCES.md) and [GamepadViewer compatibility](docs/GAMEPADVIEWER-COMPATIBILITY.md).
 
 ## Controller detection
@@ -80,7 +79,7 @@ More detail: [Controller detection and connection modes](docs/CONTROLLER-DETECTI
 
 ## Building from source
 
-The repository keeps the plugin-specific source compact. `BUILD_WINDOWS.cmd` creates an ignored local workspace from a pinned revision of the official OBS plugin template, builds the Windows x64 Release configuration, and prepares the installer and ZIP packages.
+The repository keeps the plugin-specific source compact. `BUILD_WINDOWS.cmd` creates an ignored local workspace from a pinned revision of the official OBS plugin template, builds the Windows x64 Release configuration, and prepares the installer and ZIP packages. A manual **Windows Release Build** workflow in GitHub Actions can perform the same clean release build remotely and upload a temporary artifact without publishing a GitHub Release.
 
 See [BUILDING.md](docs/BUILDING.md) for prerequisites and the exact process.
 
@@ -95,7 +94,7 @@ See [BUILDING.md](docs/BUILDING.md) for prerequisites and the exact process.
 
 ## Privacy
 
-The plugin reads controller input locally. It does not include telemetry, advertisements, a browser engine, or network requests.
+The plugin reads controller input locally. It does not include telemetry, advertisements, a browser engine, or automatic/background network requests. The project and organization buttons in the **About** section open GitHub in the system browser only when clicked.
 
 ## AI development disclosure
 

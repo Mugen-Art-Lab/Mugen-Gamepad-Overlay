@@ -8,7 +8,7 @@
 
 https://github.com/frolovlife/gamepadviewer-skins
 
-Большая ретроколлекция GamepadViewer CSS: Nintendo, Sega, NEC, SNK, Sony, 3DO, 8BitDo и другие контроллеры. Вся коллекция вручную проверена с Mugen Gamepad Overlay 0.6.3–0.8.0.
+Большая ретроколлекция GamepadViewer CSS: Nintendo, Sega, NEC, SNK, Sony, 3DO, 8BitDo и другие контроллеры. Вся коллекция вручную проверена с Mugen Gamepad Overlay 0.6.3–0.8.1.
 
 Скачивать нужно весь репозиторий через `Code → Download ZIP`, сохраняя структуру папок. В свойствах источника выбирается конкретный `.css`.
 

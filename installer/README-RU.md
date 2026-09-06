@@ -7,7 +7,7 @@
 1. Запустить `BUILD_WINDOWS.cmd` в корне репозитория.
 2. Скрипт создаст рабочую папку при необходимости и соберёт конфигурацию `Release`.
 3. `tools/package-release.ps1` подготовит стандартный и portable ZIP.
-4. Если Inno Setup найден, автоматически появится `Mugen-Gamepad-Overlay-0.8.0-Windows-x64-Setup.exe`.
+4. Если Inno Setup найден, автоматически появится `Mugen-Gamepad-Overlay-<version>-Windows-x64-Setup.exe`.
 
 Если Inno Setup ещё не установлен:
 

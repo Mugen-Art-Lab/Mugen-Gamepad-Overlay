@@ -2,7 +2,7 @@
 
 [Русская версия](GAMEPADVIEWER-COMPATIBILITY-RU.md)
 
-Mugen Gamepad Overlay 0.8.0 does not load the GamepadViewer website and is not a browser. It reads local CSS as layer data, loads local SVG/PNG/JPEG assets, and renders them through its own native OBS renderer.
+Mugen Gamepad Overlay does not load the GamepadViewer website and is not a browser. It reads local CSS as layer data, loads local SVG/PNG/JPEG assets, and renders them through its own native OBS renderer.
 
 ## Preparing a skin
 
