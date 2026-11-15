@@ -89,7 +89,7 @@ function Write-ModuleManifest {
         description = "Local SDL3 gamepad overlay source for OBS Studio"
         urls = [ordered]@{
             repository = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
-            website = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
+            website = "https://mugenartlab.com/"
             support = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues"
         }
         has_icon = $false

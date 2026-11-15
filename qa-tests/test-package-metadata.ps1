@@ -34,6 +34,8 @@ function Assert-PackageMetadata {
             if ($manifest.version -cne $Version) { throw "Wrong version in ${required}: $($manifest.version), expected $Version" }
             if ($manifest.display_name -cne 'Mugen Gamepad Overlay') { throw "Wrong display name in $required" }
             if (-not $manifest.urls.repository) { throw "Missing repository URL in $required" }
+            if ($manifest.urls.website -cne "https://mugenartlab.com/") { throw "Wrong official website URL in $required" }
+            if (-not $manifest.urls.support) { throw "Missing support URL in $required" }
         }
     }
     finally { $archive.Dispose() }
