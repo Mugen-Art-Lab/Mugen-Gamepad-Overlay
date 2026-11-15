@@ -19,6 +19,46 @@ void PixelCanvas::resize(uint32_t width, uint32_t height)
     pixels_.assign(static_cast<size_t>(width_) * height_ * 4U, 0);
 }
 
+void PixelCanvas::downsample_from_2x(const PixelCanvas &source)
+{
+    if (source.width_ != width_ * 2U || source.height_ != height_ * 2U)
+        return;
+
+    // Keep RGBA straight: average coverage, then un-premultiply each color
+    // channel. In particular, transparent anti-aliased contours must not
+    // acquire a dark fringe when OBS composites the output texture.
+    for (uint32_t y = 0; y < height_; ++y) {
+        for (uint32_t x = 0; x < width_; ++x) {
+            uint32_t alpha_sum = 0;
+            uint32_t r_sum = 0;
+            uint32_t g_sum = 0;
+            uint32_t b_sum = 0;
+            for (uint32_t sy = 0; sy < 2; ++sy) {
+                for (uint32_t sx = 0; sx < 2; ++sx) {
+                    const size_t i = (static_cast<size_t>(y * 2U + sy) * source.width_ +
+                                      x * 2U + sx) * 4U;
+                    const uint32_t a = source.pixels_[i + 3];
+                    alpha_sum += a;
+                    r_sum += source.pixels_[i + 0] * a;
+                    g_sum += source.pixels_[i + 1] * a;
+                    b_sum += source.pixels_[i + 2] * a;
+                }
+            }
+            const size_t dst = (static_cast<size_t>(y) * width_ + x) * 4U;
+            pixels_[dst + 0] = alpha_sum ? static_cast<uint8_t>((r_sum + alpha_sum / 2U) / alpha_sum) : 0;
+            pixels_[dst + 1] = alpha_sum ? static_cast<uint8_t>((g_sum + alpha_sum / 2U) / alpha_sum) : 0;
+            pixels_[dst + 2] = alpha_sum ? static_cast<uint8_t>((b_sum + alpha_sum / 2U) / alpha_sum) : 0;
+            pixels_[dst + 3] = static_cast<uint8_t>((alpha_sum + 2U) / 4U);
+        }
+    }
+}
+
+void PixelCanvas::copy_from(const PixelCanvas &source)
+{
+    if (width_ == source.width_ && height_ == source.height_)
+        std::copy(source.pixels_.begin(), source.pixels_.end(), pixels_.begin());
+}
+
 void PixelCanvas::clear(Color color)
 {
     for (uint32_t y = 0; y < height_; ++y) {
@@ -164,6 +204,62 @@ void PixelCanvas::line(int x0, int y0, int x1, int y1, int thickness, Color colo
             err += dx;
             y0 += sy;
         }
+    }
+}
+
+// Scanline fill with pixel-center tests and half-open edges. Rounded paths
+// are sampled into polygons by the built-in skin; this stays renderer-agnostic.
+void PixelCanvas::fill_polygon(const std::vector<CanvasPoint> &points, Color color)
+{
+    if (points.size() < 3 || color.a == 0)
+        return;
+
+    float min_y = points.front().y;
+    float max_y = min_y;
+    for (const CanvasPoint &point : points) {
+        min_y = std::min(min_y, point.y);
+        max_y = std::max(max_y, point.y);
+    }
+
+    const int top = std::max(0, static_cast<int>(std::ceil(min_y - 0.5F)));
+    const int bottom = std::min(static_cast<int>(height_),
+                                static_cast<int>(std::ceil(max_y - 0.5F)));
+    std::vector<float> intersections;
+    intersections.reserve(points.size());
+
+    for (int y = top; y < bottom; ++y) {
+        intersections.clear();
+        const float sample_y = static_cast<float>(y) + 0.5F;
+        for (size_t i = 0; i < points.size(); ++i) {
+            const CanvasPoint &a = points[i];
+            const CanvasPoint &b = points[(i + 1) % points.size()];
+            if ((a.y <= sample_y && b.y > sample_y) ||
+                (b.y <= sample_y && a.y > sample_y)) {
+                const float t = (sample_y - a.y) / (b.y - a.y);
+                intersections.push_back(a.x + t * (b.x - a.x));
+            }
+        }
+        std::sort(intersections.begin(), intersections.end());
+        for (size_t i = 0; i + 1 < intersections.size(); i += 2) {
+            const int left = static_cast<int>(std::ceil(intersections[i] - 0.5F));
+            const int right = static_cast<int>(std::ceil(intersections[i + 1] - 0.5F));
+            if (right > left)
+                fill_rect(left, y, right - left, 1, color);
+        }
+    }
+}
+
+void PixelCanvas::stroke_polygon(const std::vector<CanvasPoint> &points,
+                                  int thickness, Color color)
+{
+    if (points.size() < 2 || thickness <= 0 || color.a == 0)
+        return;
+    for (size_t i = 0; i < points.size(); ++i) {
+        const CanvasPoint &a = points[i];
+        const CanvasPoint &b = points[(i + 1) % points.size()];
+        line(static_cast<int>(std::lround(a.x)), static_cast<int>(std::lround(a.y)),
+             static_cast<int>(std::lround(b.x)), static_cast<int>(std::lround(b.y)),
+             thickness, color);
     }
 }
 
@@ -399,6 +495,7 @@ std::array<uint8_t, 7> PixelCanvas::glyph(char32_t ch)
     case U'7': return {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08};
     case U'8': return {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E};
     case U'9': return {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x01, 0x0E};
+    case U'+': return {0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00};
     case U'-': return {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00};
     case U'/': return {0x01, 0x02, 0x02, 0x04, 0x08, 0x08, 0x10};
     case U'.': return {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C};

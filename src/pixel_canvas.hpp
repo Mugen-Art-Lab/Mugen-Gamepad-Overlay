@@ -19,6 +19,13 @@ struct Color {
     uint8_t a;
 };
 
+// Canvas-space points permit curved shell silhouettes to be rasterized
+// without baking any third-party controller artwork into the plugin.
+struct CanvasPoint {
+    float x = 0.0F;
+    float y = 0.0F;
+};
+
 class PixelCanvas {
 public:
     PixelCanvas(uint32_t width, uint32_t height);
@@ -31,6 +38,10 @@ public:
     const uint8_t *data() const noexcept { return pixels_.data(); }
 
     void clear(Color color = {0, 0, 0, 0});
+    // Cheap copy for reusing a state-independent controller shell.
+    void copy_from(const PixelCanvas &source);
+    // Alpha-correct 2x supersampling resolve used only by the built-in technical skin.
+    void downsample_from_2x(const PixelCanvas &source);
     void fill_rect(int x, int y, int w, int h, Color color);
     void stroke_rect(int x, int y, int w, int h, int thickness, Color color);
     void fill_rounded_rect(int x, int y, int w, int h, int radius, Color color);
@@ -39,6 +50,8 @@ public:
     void stroke_circle(int cx, int cy, int radius, int thickness, Color color);
     void stroke_ellipse(int cx, int cy, int rx, int ry, int thickness, Color color);
     void line(int x0, int y0, int x1, int y1, int thickness, Color color);
+    void fill_polygon(const std::vector<CanvasPoint> &points, Color color);
+    void stroke_polygon(const std::vector<CanvasPoint> &points, int thickness, Color color);
     void text(int x, int y, std::string_view value, int scale, Color color, bool centered = false);
     void blit_rgba(const uint8_t *source, uint32_t source_width, uint32_t source_height,
                    int source_x, int source_y, int width, int height, int dest_x, int dest_y);

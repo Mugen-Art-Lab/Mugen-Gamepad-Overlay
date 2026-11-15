@@ -6,7 +6,8 @@
   #error MyAppVersion is required. Use installer\build-installer.ps1.
 #endif
 #define MyAppPublisher "Mugen Art Lab"
-#define MyAppURL "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
+#define MyAppURL "https://mugenartlab.com/"
+#define MyRepoURL "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
 #define MyPluginName "mugen-gamepad-overlay"
 
 #ifndef PayloadRoot
@@ -26,8 +27,8 @@ AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}/issues
-AppUpdatesURL={#MyAppURL}/releases
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyRepoURL}/releases
 AppCopyright=Copyright (C) 2026 Mugen Art Lab
 DefaultDirName={commonappdata}\obs-studio\plugins\{#MyPluginName}
 DisableDirPage=yes

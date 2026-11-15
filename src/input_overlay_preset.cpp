@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "input_overlay_preset.hpp"
-
-#include <graphics/image-file.h>
-#include <obs-module.h>
+#include "wic_image_decoder.hpp"
 
 #include <algorithm>
 #include <array>
@@ -536,51 +534,17 @@ std::string resolve_image_path(const std::string &config_path, const std::string
 
 bool load_png_rgba(const std::string &path, InputOverlayPreset &preset, std::string &error)
 {
-    gs_image_file_t image{};
-    gs_image_file_init(&image, path.c_str());
-    if (!image.loaded || !image.texture_data || image.cx == 0 || image.cy == 0) {
-        obs_enter_graphics();
-        gs_image_file_free(&image);
-        obs_leave_graphics();
-        error = "The PNG atlas could not be decoded";
+    // The same WIC decoding path serves Input Overlay 5.x PNG atlases and
+    // GamepadViewer PNG/JPEG assets without OBS version-specific image imports.
+    std::string detail;
+    if (!decode_image_file_rgba_wic(path, kMaxDimension, kMaxPixelBytes,
+                                    preset.atlas_width, preset.atlas_height,
+                                    preset.atlas_rgba, detail)) {
+        error = detail == "Image is too large"
+                    ? "The PNG atlas is too large"
+                    : "The PNG atlas could not be decoded: " + detail;
         return false;
     }
-
-    if (image.cx > kMaxDimension || image.cy > kMaxDimension ||
-        static_cast<uint64_t>(image.cx) * image.cy * 4ULL > kMaxPixelBytes) {
-        obs_enter_graphics();
-        gs_image_file_free(&image);
-        obs_leave_graphics();
-        error = "The PNG atlas is too large";
-        return false;
-    }
-
-    preset.atlas_width = image.cx;
-    preset.atlas_height = image.cy;
-    preset.atlas_rgba.resize(static_cast<size_t>(image.cx) * image.cy * 4U);
-
-    const size_t pixel_count = static_cast<size_t>(image.cx) * image.cy;
-    if (image.format == GS_RGBA) {
-        std::copy_n(image.texture_data, pixel_count * 4U, preset.atlas_rgba.data());
-    } else if (image.format == GS_BGRA) {
-        for (size_t i = 0; i < pixel_count; ++i) {
-            preset.atlas_rgba[i * 4U + 0] = image.texture_data[i * 4U + 2];
-            preset.atlas_rgba[i * 4U + 1] = image.texture_data[i * 4U + 1];
-            preset.atlas_rgba[i * 4U + 2] = image.texture_data[i * 4U + 0];
-            preset.atlas_rgba[i * 4U + 3] = image.texture_data[i * 4U + 3];
-        }
-    } else {
-        obs_enter_graphics();
-        gs_image_file_free(&image);
-        obs_leave_graphics();
-        error = "The PNG atlas decoded to an unsupported pixel format";
-        preset.atlas_rgba.clear();
-        return false;
-    }
-
-    obs_enter_graphics();
-    gs_image_file_free(&image);
-    obs_leave_graphics();
     return true;
 }
 

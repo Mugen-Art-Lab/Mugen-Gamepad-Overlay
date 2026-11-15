@@ -82,6 +82,8 @@ target_sources(
     src/gamepad_source.hpp
     src/gamepadviewer_skin.cpp
     src/gamepadviewer_skin.hpp
+    src/wic_image_decoder.cpp
+    src/wic_image_decoder.hpp
     src/svg_rasterizer.cpp
     src/svg_rasterizer.hpp
     src/input_types.hpp
@@ -108,7 +110,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "${nanosvg_SOURCE_DIR}/
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs SDL3::SDL3-static)
 
 if(WIN32)
-  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE shell32)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE shell32 ole32 windowscodecs)
 endif()
 
 if(MSVC)

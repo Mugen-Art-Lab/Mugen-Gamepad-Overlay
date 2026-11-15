@@ -1,4 +1,4 @@
-# Mugen Gamepad Overlay 0.8.1
+# Mugen Gamepad Overlay 0.8.2
 
 [Русская версия](README-RU.md)
 
@@ -22,9 +22,16 @@ Use the files attached to the latest [GitHub Release](https://github.com/Mugen-A
 
 The automatically generated **Source code** archives on GitHub contain the project source, not a ready-to-install plugin.
 
+## What's new in 0.8.2
+
+- Redesigned built-in technical skin with automatic Xbox-like, PlayStation-like and Nintendo-like layouts.
+- Optional **one source size for all skins (1120×640)**: switch between built-in, Input Overlay and GamepadViewer artwork without changing the source dimensions. Enable it in source properties, then resize the source once in the OBS scene. It is **off by default** to preserve existing scenes.
+- OBS Studio 33 compatibility fix without dropping OBS Studio 32 support; compatible package layouts and plugin version metadata.
+- The official [Mugen Art Lab website](https://mugenartlab.com/) is linked from the plugin and installer for feedback and project information.
+
 ## Highlights
 
-- Built-in universal technical skin for immediate testing.
+- Redesigned built-in technical skin with automatic controller-family layouts and manual selection.
 - Local Input Overlay 5.x `JSON + PNG` presets.
 - Local GamepadViewer `CSS + SVG/PNG/JPEG` skins rendered without a browser or JavaScript.
 - Analog sticks, L3/R3, D-pad, shoulders, analog triggers, Guide/Home, Capture/Misc, and Touchpad click when exposed by the controller.
@@ -41,7 +48,7 @@ The automatically generated **Source code** archives on GitHub contain the proje
 ### Installer — recommended
 
 1. Close OBS Studio completely.
-2. Run `Mugen-Gamepad-Overlay-0.8.1-Windows-x64-Setup.exe`.
+2. Run `Mugen-Gamepad-Overlay-0.8.2-Windows-x64-Setup.exe`.
 3. Start OBS Studio and add a new **Mugen Gamepad Overlay** source.
 
 The installer uses the all-users plugin directory:
@@ -65,13 +72,13 @@ More information: [skin sources](docs/SKIN-SOURCES.md) and [GamepadViewer compat
 
 Automatic labels follow the controller type and layout reported by Windows and SDL. They may differ from the markings on the physical controller because of Bluetooth/XInput/DInput modes, drivers, Steam Input, DS4Windows, adapters, or virtual controllers.
 
-Verified real-device scenarios include DualSense, Xbox-compatible controllers, Flydigi Vader 2 Pro through USB and its receiver, 8BitDo M30 in multiple modes, SVEN X-PAD, and Flipper Zero in USB Game Controller mode. Specialized raw Joystick/HOTAS devices are outside the 0.8.1 scope.
+Verified real-device scenarios include DualSense, Xbox-compatible controllers, Flydigi Vader 2 Pro through USB and its receiver, 8BitDo M30 in multiple modes, SVEN X-PAD, and Flipper Zero in USB Game Controller mode. Specialized raw Joystick/HOTAS devices are outside the 0.8.2 scope.
 
 More detail: [Controller detection and connection modes](docs/CONTROLLER-DETECTION.md).
 
 ## Known limits
 
-- Windows x64 only in 0.8.1.
+- Windows x64 only in 0.8.2.
 - Raw SDL Joystick/HOTAS devices are not supported unless SDL exposes them as a Gamepad.
 - Arbitrary browser CSS, JavaScript, HTML, remote assets, and CSS animation are not guaranteed.
 - Old Input Overlay INI presets and RetroArch CFG overlays are not supported.
@@ -94,7 +101,7 @@ See [BUILDING.md](docs/BUILDING.md) for prerequisites and the exact process.
 
 ## Privacy
 
-The plugin reads controller input locally. It does not include telemetry, advertisements, a browser engine, or automatic/background network requests. The project and organization buttons in the **About** section open GitHub in the system browser only when clicked.
+The plugin reads controller input locally. It does not include telemetry, advertisements, a browser engine, or automatic/background network requests. The **About** buttons open the plugin's GitHub repository or the Mugen Art Lab website in your system browser **only when clicked**. No website connection is required to use the overlay.
 
 ## AI development disclosure
 
@@ -104,9 +111,9 @@ See [AI-DISCLOSURE.md](AI-DISCLOSURE.md).
 
 ## Support and issues
 
-Report reproducible bugs through the [issue tracker](https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues). See [SUPPORT.md](SUPPORT.md) for the information needed in a report.
+For feedback, questions and ideas, visit [Mugen Art Lab](https://mugenartlab.com/) and choose **Write**. Reproducible technical bugs can also be reported through the [issue tracker](https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues); see [SUPPORT.md](SUPPORT.md) for the information to include.
 
-Mugen Gamepad Overlay is free and open source. Optional support links are available on the [Mugen Art Lab GitHub profile](https://github.com/Mugen-Art-Lab).
+Mugen Gamepad Overlay is free and open source. Its source code, releases and issue tracker remain available on GitHub.
 
 ## License
 
