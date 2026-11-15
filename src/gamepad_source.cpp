@@ -41,7 +41,7 @@ constexpr const char *kInputOverlayAutoVariant = "__auto__";
 constexpr const char *kInputOverlayManualVariant = "__manual__";
 constexpr float kDeviceListScanInterval = 0.5F;
 constexpr const char *kProjectUrl = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay";
-constexpr const char *kMugenArtLabUrl = "https://github.com/Mugen-Art-Lab";
+constexpr const char *kMugenArtLabUrl = "https://mugenartlab.com/";
 
 bool string_equals(const char *value, const char *expected)
 {
@@ -64,6 +64,13 @@ bool path_equals(const std::string &a, const std::string &b)
 #else
     return a == b;
 #endif
+}
+
+obs_properties_t *root_properties(obs_properties_t *properties)
+{
+    while (properties && obs_properties_get_parent(properties))
+        properties = obs_properties_get_parent(properties);
+    return properties;
 }
 
 void set_property_visible(obs_properties_t *properties, const char *name, bool visible)
@@ -141,7 +148,7 @@ bool refresh_input_overlay_variants(obs_properties_t *properties, obs_data_t *se
 
 void set_skin_status_description(obs_properties_t *properties, const char *translation_key)
 {
-    if (obs_property_t *status = obs_properties_get(properties, "skin_status"))
+    if (obs_property_t *status = obs_properties_get(root_properties(properties), "skin_status"))
         obs_property_set_description(status, obs_module_text(translation_key));
 }
 
@@ -176,6 +183,14 @@ bool universal_service_buttons_modified(obs_properties_t *, obs_property_t *, ob
     return true;
 }
 
+bool advanced_mapping_visibility_modified(obs_properties_t *properties,
+                                         obs_property_t *, obs_data_t *settings)
+{
+    set_property_visible(root_properties(properties), "advanced_mapping",
+                         obs_data_get_bool(settings, "show_advanced_mapping"));
+    return true;
+}
+
 bool dpad_mode_modified(obs_properties_t *properties, obs_property_t *, obs_data_t *settings)
 {
     const char *mode = obs_data_get_string(settings, "dpad_input_mode");
@@ -190,17 +205,9 @@ bool skin_modified(obs_properties_t *properties, obs_property_t *, obs_data_t *s
     const bool input_overlay = string_equals(skin_raw, "input_overlay");
     const bool gamepadviewer = string_equals(skin_raw, "gamepadviewer");
 
-    set_property_visible(properties, "universal_help", universal);
-    set_property_visible(properties, "universal_service_buttons", universal);
-    set_property_visible(properties, "input_overlay_config_path", input_overlay);
-    set_property_visible(properties, "input_overlay_variant_path", input_overlay);
-    set_property_visible(properties, "input_overlay_variant_status", input_overlay);
-    set_property_visible(properties, "input_overlay_help", input_overlay);
-    set_property_visible(properties, "gamepadviewer_css_path", gamepadviewer);
-    set_property_visible(properties, "gamepadviewer_help", gamepadviewer);
-    set_property_visible(properties, "gamepadviewer_stick_travel", gamepadviewer);
-    set_property_visible(properties, "gamepadviewer_trigger_threshold", gamepadviewer);
-    set_property_visible(properties, "gamepadviewer_analog_help", gamepadviewer);
+    set_property_visible(properties, "universal_group", universal);
+    set_property_visible(properties, "input_overlay_group", input_overlay);
+    set_property_visible(properties, "gamepadviewer_group", gamepadviewer);
     set_property_visible(properties, "skin_status", input_overlay || gamepadviewer);
 
     if (input_overlay) {
@@ -343,6 +350,26 @@ FaceButtonLabels manual_face_button_labels(std::string_view mode)
     return xbox_face_button_labels();
 }
 
+ControllerVisualProfile visual_profile_from_type(SDL_GamepadType type)
+{
+    switch (type) {
+    case SDL_GAMEPAD_TYPE_XBOX360:
+    case SDL_GAMEPAD_TYPE_XBOXONE:
+        return ControllerVisualProfile::XboxLike;
+    case SDL_GAMEPAD_TYPE_PS3:
+    case SDL_GAMEPAD_TYPE_PS4:
+    case SDL_GAMEPAD_TYPE_PS5:
+        return ControllerVisualProfile::PlayStationLike;
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+        return ControllerVisualProfile::NintendoLike;
+    default:
+        return ControllerVisualProfile::Generic;
+    }
+}
+
 struct ConnectedGamepad {
     SDL_JoystickID id = 0;
     SDL_GamepadType type = SDL_GAMEPAD_TYPE_UNKNOWN;
@@ -428,6 +455,14 @@ FaceButtonLabels face_button_labels_from_settings(obs_data_t *settings)
     const std::string mode = mode_raw && *mode_raw ? mode_raw : "auto";
     if (mode != "auto")
         return manual_face_button_labels(mode);
+
+    const char *visual_mode = settings ? obs_data_get_string(settings, "universal_visual_profile") : nullptr;
+    if (string_equals(visual_mode, "playstation"))
+        return playstation_face_button_labels();
+    if (string_equals(visual_mode, "nintendo"))
+        return nintendo_face_button_labels();
+    if (string_equals(visual_mode, "xbox"))
+        return xbox_face_button_labels();
 
     const SDL_JoystickID selected = selected_gamepad_id(settings);
     return selected != 0 ? face_button_labels_from_type(SDL_GetGamepadTypeForID(selected))
@@ -645,7 +680,7 @@ void refresh_face_button_mapping(obs_properties_t *properties, obs_data_t *setti
 bool face_button_labels_modified(obs_properties_t *properties, obs_property_t *,
                                  obs_data_t *settings)
 {
-    refresh_face_button_mapping(properties, settings);
+    refresh_face_button_mapping(root_properties(properties), settings);
     return true;
 }
 
@@ -746,12 +781,16 @@ void GamepadSource::defaults(obs_data_t *settings)
 {
     obs_data_set_default_string(settings, "device_id", "auto");
     obs_data_set_default_string(settings, "skin", "universal");
+    // Existing scenes keep native dimensions unless the owner opts into HD canvas.
+    obs_data_set_default_bool(settings, "high_res_canvas_output", false);
     obs_data_set_default_string(settings, "custom_skin_path", "");
     obs_data_set_default_string(settings, "input_overlay_config_path", "");
     obs_data_set_default_string(settings, "input_overlay_variant_path", kInputOverlayAutoVariant);
     obs_data_set_default_string(settings, "input_overlay_image_path", "");
     obs_data_set_default_string(settings, "gamepadviewer_css_path", "");
     obs_data_set_default_string(settings, "universal_service_buttons", "auto");
+    obs_data_set_default_string(settings, "universal_visual_profile", "auto");
+    obs_data_set_default_bool(settings, "show_advanced_mapping", false);
     obs_data_set_default_string(settings, "face_button_labels", "auto");
     obs_data_set_default_bool(settings, "hide_disconnected", false);
     obs_data_set_default_bool(settings, "polling_enabled", true);
@@ -800,9 +839,31 @@ obs_properties_t *GamepadSource::properties(void *data)
     obs_property_list_add_string(skins, obs_module_text("Skin.GamepadViewer"), "gamepadviewer");
     obs_property_set_modified_callback(skins, skin_modified);
 
-    obs_properties_add_text(properties, "universal_help", obs_module_text("UniversalHelp"), OBS_TEXT_INFO);
+    // Optional high-resolution, common 1120x640 OBS source. OBS scene scale
+    // can then be adjusted downwards; pre-existing scenes stay native by default.
+    obs_properties_add_bool(properties, "high_res_canvas_output",
+                            obs_module_text("HighResCanvasOutput"));
+    obs_properties_add_text(properties, "high_res_canvas_output_help",
+                            obs_module_text("HighResCanvasOutput.Help"), OBS_TEXT_INFO);
+
+    // Mode-specific groups keep irrelevant controls out of the visible window.
+    // Setting identifiers remain unchanged for backward compatibility.
+    obs_properties_t *universal_properties = obs_properties_create();
+    obs_properties_add_text(universal_properties, "universal_help", obs_module_text("UniversalHelp"), OBS_TEXT_INFO);
+    obs_property_t *visual_profile = obs_properties_add_list(
+        universal_properties, "universal_visual_profile", obs_module_text("UniversalVisualProfile"),
+        OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+    obs_property_list_add_string(visual_profile, obs_module_text("UniversalVisualProfile.Auto"), "auto");
+    obs_property_list_add_string(visual_profile, obs_module_text("UniversalVisualProfile.Generic"), "generic");
+    obs_property_list_add_string(visual_profile, obs_module_text("UniversalVisualProfile.Xbox"), "xbox");
+    obs_property_list_add_string(visual_profile, obs_module_text("UniversalVisualProfile.PlayStation"), "playstation");
+    obs_property_list_add_string(visual_profile, obs_module_text("UniversalVisualProfile.Nintendo"), "nintendo");
+    obs_property_set_modified_callback(visual_profile, device_modified);
+    obs_properties_add_text(universal_properties, "universal_visual_profile_help",
+                            obs_module_text("UniversalVisualProfile.Help"), OBS_TEXT_INFO);
+
     obs_property_t *service_buttons = obs_properties_add_list(
-        properties, "universal_service_buttons", obs_module_text("UniversalServiceButtons"),
+        universal_properties, "universal_service_buttons", obs_module_text("UniversalServiceButtons"),
         OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     obs_property_list_add_string(service_buttons, obs_module_text("UniversalServiceButtons.Auto"), "auto");
     obs_property_list_add_string(service_buttons, obs_module_text("UniversalServiceButtons.All"), "all");
@@ -811,63 +872,90 @@ obs_properties_t *GamepadSource::properties(void *data)
     obs_property_set_modified_callback(service_buttons, universal_service_buttons_modified);
 
     obs_property_t *face_button_labels = obs_properties_add_list(
-        properties, "face_button_labels", obs_module_text("FaceButtonLabels"),
+        universal_properties, "face_button_labels", obs_module_text("FaceButtonLabels"),
         OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     obs_property_list_add_string(face_button_labels, obs_module_text("FaceButtonLabels.Auto"), "auto");
     obs_property_list_add_string(face_button_labels, obs_module_text("FaceButtonLabels.Xbox"), "xbox");
     obs_property_list_add_string(face_button_labels, obs_module_text("FaceButtonLabels.PlayStation"), "playstation");
     obs_property_list_add_string(face_button_labels, obs_module_text("FaceButtonLabels.Nintendo"), "nintendo");
     obs_property_set_modified_callback(face_button_labels, face_button_labels_modified);
-    obs_properties_add_text(properties, "face_button_labels_help",
+    obs_properties_add_text(universal_properties, "face_button_labels_help",
                             obs_module_text("FaceButtonLabels.Help"), OBS_TEXT_INFO);
 
+
+    obs_properties_add_group(properties, "universal_group",
+                             obs_module_text("Group.Universal"), OBS_GROUP_NORMAL,
+                             universal_properties);
+
+    obs_properties_t *input_overlay_properties = obs_properties_create();
     obs_property_t *input_overlay_config =
-        obs_properties_add_path(properties, "input_overlay_config_path", obs_module_text("InputOverlayConfigPath"),
+        obs_properties_add_path(input_overlay_properties, "input_overlay_config_path", obs_module_text("InputOverlayConfigPath"),
                                 OBS_PATH_FILE, "Input Overlay preset (*.json);;JSON (*.json)", nullptr);
     obs_property_set_modified_callback(input_overlay_config, input_overlay_config_modified);
 
     obs_property_t *input_overlay_variants =
-        obs_properties_add_list(properties, "input_overlay_variant_path", obs_module_text("InputOverlayVariant"),
+        obs_properties_add_list(input_overlay_properties, "input_overlay_variant_path", obs_module_text("InputOverlayVariant"),
                                 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     obs_property_set_modified_callback(input_overlay_variants, input_overlay_variant_modified);
 
-    obs_properties_add_path(properties, "input_overlay_image_path", obs_module_text("InputOverlayImagePath"),
+    obs_properties_add_path(input_overlay_properties, "input_overlay_image_path", obs_module_text("InputOverlayImagePath"),
                             OBS_PATH_FILE, "PNG texture (*.png);;PNG (*.png)", nullptr);
-    obs_properties_add_text(properties, "input_overlay_variant_status",
+    obs_properties_add_text(input_overlay_properties, "input_overlay_variant_status",
                             obs_module_text("InputOverlayVariantsNotScanned"), OBS_TEXT_INFO);
-    obs_properties_add_text(properties, "input_overlay_help", obs_module_text("InputOverlayHelp"), OBS_TEXT_INFO);
+    obs_properties_add_text(input_overlay_properties, "input_overlay_help", obs_module_text("InputOverlayHelp"), OBS_TEXT_INFO);
 
+
+    obs_properties_add_group(properties, "input_overlay_group",
+                             obs_module_text("Group.InputOverlay"), OBS_GROUP_NORMAL,
+                             input_overlay_properties);
+
+    obs_properties_t *gamepadviewer_properties = obs_properties_create();
     obs_property_t *gamepadviewer_css =
-        obs_properties_add_path(properties, "gamepadviewer_css_path", obs_module_text("GamepadViewerCssPath"),
+        obs_properties_add_path(gamepadviewer_properties, "gamepadviewer_css_path", obs_module_text("GamepadViewerCssPath"),
                                 OBS_PATH_FILE, "GamepadViewer CSS (*.css);;CSS (*.css)", nullptr);
     obs_property_set_modified_callback(gamepadviewer_css, gamepadviewer_css_modified);
-    obs_properties_add_text(properties, "gamepadviewer_help", obs_module_text("GamepadViewerHelp"), OBS_TEXT_INFO);
+    obs_properties_add_text(gamepadviewer_properties, "gamepadviewer_help", obs_module_text("GamepadViewerHelp"), OBS_TEXT_INFO);
     obs_property_t *stick_travel = obs_properties_add_int_slider(
-        properties, "gamepadviewer_stick_travel", obs_module_text("GamepadViewerStickTravel"), 0, 40, 1);
+        gamepadviewer_properties, "gamepadviewer_stick_travel", obs_module_text("GamepadViewerStickTravel"), 0, 40, 1);
     obs_property_int_set_suffix(stick_travel, "%");
     obs_property_t *trigger_threshold = obs_properties_add_int_slider(
-        properties, "gamepadviewer_trigger_threshold", obs_module_text("GamepadViewerTriggerThreshold"), 0, 100, 1);
+        gamepadviewer_properties, "gamepadviewer_trigger_threshold", obs_module_text("GamepadViewerTriggerThreshold"), 0, 100, 1);
     obs_property_int_set_suffix(trigger_threshold, "%");
-    obs_properties_add_text(properties, "gamepadviewer_analog_help",
+    obs_properties_add_text(gamepadviewer_properties, "gamepadviewer_analog_help",
                             obs_module_text("GamepadViewerAnalogHelp"), OBS_TEXT_INFO);
+
+    obs_properties_add_group(properties, "gamepadviewer_group",
+                             obs_module_text("Group.GamepadViewer"), OBS_GROUP_NORMAL,
+                             gamepadviewer_properties);
+
     obs_properties_add_text(properties, "skin_status", obs_module_text("SkinStatus.NotLoaded"), OBS_TEXT_INFO);
 
-    obs_properties_add_bool(properties, "polling_enabled", obs_module_text("PollingEnabled"));
-    obs_properties_add_bool(properties, "hide_disconnected", obs_module_text("HideDisconnected"));
-    obs_property_t *deadzone = obs_properties_add_int_slider(properties, "deadzone", obs_module_text("Deadzone"), 0, 50, 1);
+    obs_properties_t *behavior_properties = obs_properties_create();
+    obs_properties_add_bool(behavior_properties, "polling_enabled", obs_module_text("PollingEnabled"));
+    obs_properties_add_bool(behavior_properties, "hide_disconnected", obs_module_text("HideDisconnected"));
+    obs_property_t *deadzone = obs_properties_add_int_slider(behavior_properties, "deadzone", obs_module_text("Deadzone"), 0, 50, 1);
     obs_property_int_set_suffix(deadzone, "%");
 
     obs_property_t *dpad_mode = obs_properties_add_list(
-        properties, "dpad_input_mode", obs_module_text("DpadInputMode"),
+        behavior_properties, "dpad_input_mode", obs_module_text("DpadInputMode"),
         OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
     obs_property_list_add_string(dpad_mode, obs_module_text("DpadInputMode.Buttons"), "buttons");
     obs_property_list_add_string(dpad_mode, obs_module_text("DpadInputMode.LeftStick"), "left_stick");
     obs_property_list_add_string(dpad_mode, obs_module_text("DpadInputMode.Both"), "both");
     obs_property_set_modified_callback(dpad_mode, dpad_mode_modified);
     obs_property_t *dpad_threshold = obs_properties_add_int_slider(
-        properties, "dpad_axis_threshold", obs_module_text("DpadAxisThreshold"), 20, 95, 1);
+        behavior_properties, "dpad_axis_threshold", obs_module_text("DpadAxisThreshold"), 20, 95, 1);
     obs_property_int_set_suffix(dpad_threshold, "%");
-    obs_properties_add_text(properties, "hotkey_help", obs_module_text("HotkeyHelp"), OBS_TEXT_INFO);
+    obs_properties_add_text(behavior_properties, "hotkey_help", obs_module_text("HotkeyHelp"), OBS_TEXT_INFO);
+
+
+    obs_properties_add_group(properties, "behavior_group",
+                             obs_module_text("Group.Behavior"), OBS_GROUP_NORMAL,
+                             behavior_properties);
+
+    obs_property_t *advanced_toggle = obs_properties_add_bool(
+        properties, "show_advanced_mapping", obs_module_text("AdvancedMapping.Show"));
+    obs_property_set_modified_callback(advanced_toggle, advanced_mapping_visibility_modified);
 
     obs_properties_t *mapping = obs_properties_create();
     obs_properties_add_text(mapping, "mapping_help", obs_module_text("MappingHelp"), OBS_TEXT_INFO);
@@ -911,8 +999,9 @@ obs_properties_t *GamepadSource::properties(void *data)
         if (current) {
             skin_modified(properties, nullptr, current);
             dpad_mode_modified(properties, nullptr, current);
+            advanced_mapping_visibility_modified(properties, nullptr, current);
             refresh_face_button_mapping(properties, current);
-            if (obs_property_t *status = obs_properties_get(properties, "skin_status")) {
+            if (obs_property_t *status = obs_properties_get(root_properties(properties), "skin_status")) {
                 const char *description = source->skin_status_.empty()
                                               ? obs_module_text("SkinStatus.NotLoaded")
                                               : source->skin_status_.c_str();
@@ -921,19 +1010,11 @@ obs_properties_t *GamepadSource::properties(void *data)
             obs_data_release(current);
         }
     } else {
-        set_property_visible(properties, "universal_help", true);
-        set_property_visible(properties, "universal_service_buttons", true);
-        set_property_visible(properties, "input_overlay_config_path", false);
-        set_property_visible(properties, "input_overlay_variant_path", false);
-        set_property_visible(properties, "input_overlay_variant_status", false);
-        set_property_visible(properties, "input_overlay_image_path", false);
-        set_property_visible(properties, "input_overlay_help", false);
-        set_property_visible(properties, "gamepadviewer_css_path", false);
-        set_property_visible(properties, "gamepadviewer_help", false);
-        set_property_visible(properties, "gamepadviewer_stick_travel", false);
-        set_property_visible(properties, "gamepadviewer_trigger_threshold", false);
-        set_property_visible(properties, "gamepadviewer_analog_help", false);
+        set_property_visible(properties, "universal_group", true);
+        set_property_visible(properties, "input_overlay_group", false);
+        set_property_visible(properties, "gamepadviewer_group", false);
         set_property_visible(properties, "skin_status", false);
+        set_property_visible(properties, "advanced_mapping", false);
         set_property_visible(properties, "dpad_axis_threshold", false);
     }
 
@@ -962,12 +1043,14 @@ void GamepadSource::replace_skin(SkinDefinition &&skin)
     if (dimensions_changed) {
         destroy_texture();
         canvas_.resize(skin_definition_.width, skin_definition_.height);
-        output_width_.store(skin_definition_.width, std::memory_order_relaxed);
-        output_height_.store(skin_definition_.height, std::memory_order_relaxed);
         texture_ready_logged_ = false;
         texture_failure_logged_ = false;
     }
 
+    // Logical dimensions may change even if the physical texture resolution
+    // happens to match the 2x built-in skin (e.g. a 1120x640 imported atlas).
+    output_width_.store(skin_definition_.width, std::memory_order_relaxed);
+    output_height_.store(skin_definition_.height, std::memory_order_relaxed);
     texture_dirty_ = true;
     has_last_state_ = false;
 }
@@ -983,12 +1066,14 @@ void GamepadSource::replace_input_overlay(InputOverlayPreset &&preset)
     if (dimensions_changed) {
         destroy_texture();
         canvas_.resize(input_overlay_preset_.width, input_overlay_preset_.height);
-        output_width_.store(input_overlay_preset_.width, std::memory_order_relaxed);
-        output_height_.store(input_overlay_preset_.height, std::memory_order_relaxed);
         texture_ready_logged_ = false;
         texture_failure_logged_ = false;
     }
 
+    // Logical dimensions may change even if the physical texture resolution
+    // happens to match the 2x built-in skin (e.g. a 1120x640 imported atlas).
+    output_width_.store(input_overlay_preset_.width, std::memory_order_relaxed);
+    output_height_.store(input_overlay_preset_.height, std::memory_order_relaxed);
     texture_dirty_ = true;
     has_last_state_ = false;
 }
@@ -1004,20 +1089,24 @@ void GamepadSource::replace_gamepadviewer(GamepadViewerSkin &&skin)
     if (dimensions_changed) {
         destroy_texture();
         canvas_.resize(gamepadviewer_skin_.width, gamepadviewer_skin_.height);
-        output_width_.store(gamepadviewer_skin_.width, std::memory_order_relaxed);
-        output_height_.store(gamepadviewer_skin_.height, std::memory_order_relaxed);
         texture_ready_logged_ = false;
         texture_failure_logged_ = false;
     }
 
+    // Logical dimensions may change even if the physical texture resolution
+    // happens to match the 2x built-in skin (e.g. a 1120x640 imported atlas).
+    output_width_.store(gamepadviewer_skin_.width, std::memory_order_relaxed);
+    output_height_.store(gamepadviewer_skin_.height, std::memory_order_relaxed);
     texture_dirty_ = true;
     has_last_state_ = false;
 }
 
 void GamepadSource::replace_universal()
 {
-    const bool dimensions_changed = canvas_.width() != kUniversalSkinWidth ||
-                                    canvas_.height() != kUniversalSkinHeight;
+    // Double the *texture* resolution, not the OBS source dimensions.
+    // Existing source transforms keep their original 560x320 coordinate space.
+    const bool dimensions_changed = canvas_.width() != kUniversalRenderWidth ||
+                                    canvas_.height() != kUniversalRenderHeight;
     skin_definition_ = {};
     input_overlay_preset_ = {};
     gamepadviewer_skin_ = {};
@@ -1026,13 +1115,13 @@ void GamepadSource::replace_universal()
 
     if (dimensions_changed) {
         destroy_texture();
-        canvas_.resize(kUniversalSkinWidth, kUniversalSkinHeight);
-        output_width_.store(kUniversalSkinWidth, std::memory_order_relaxed);
-        output_height_.store(kUniversalSkinHeight, std::memory_order_relaxed);
+        canvas_.resize(kUniversalRenderWidth, kUniversalRenderHeight);
         texture_ready_logged_ = false;
         texture_failure_logged_ = false;
     }
 
+    output_width_.store(kUniversalSkinWidth, std::memory_order_relaxed);
+    output_height_.store(kUniversalSkinHeight, std::memory_order_relaxed);
     texture_dirty_ = true;
     has_last_state_ = false;
 }
@@ -1050,12 +1139,14 @@ void GamepadSource::replace_error(std::string error)
     if (dimensions_changed) {
         destroy_texture();
         canvas_.resize(kErrorSkinWidth, kErrorSkinHeight);
-        output_width_.store(kErrorSkinWidth, std::memory_order_relaxed);
-        output_height_.store(kErrorSkinHeight, std::memory_order_relaxed);
         texture_ready_logged_ = false;
         texture_failure_logged_ = false;
     }
 
+    // Logical dimensions may change even if the physical texture resolution
+    // happens to match the 2x built-in skin (e.g. a 1120x640 imported atlas).
+    output_width_.store(kErrorSkinWidth, std::memory_order_relaxed);
+    output_height_.store(kErrorSkinHeight, std::memory_order_relaxed);
     texture_dirty_ = true;
     has_last_state_ = false;
 }
@@ -1088,7 +1179,43 @@ UniversalSkinOptions GamepadSource::universal_options() const
         options.show_misc1 = has_misc1_;
         options.show_touchpad = has_touchpad_;
     }
+    if (universal_visual_profile_ == "xbox") {
+        options.profile = ControllerVisualProfile::XboxLike;
+    } else if (universal_visual_profile_ == "playstation") {
+        options.profile = ControllerVisualProfile::PlayStationLike;
+    } else if (universal_visual_profile_ == "nintendo") {
+        options.profile = ControllerVisualProfile::NintendoLike;
+    } else if (universal_visual_profile_ == "generic") {
+        options.profile = ControllerVisualProfile::Generic;
+    } else {
+        SDL_GamepadType type = SDL_GAMEPAD_TYPE_UNKNOWN;
+        if (gamepad_) {
+            type = SDL_GetGamepadType(gamepad_);
+        } else if (requested_device_ != "auto") {
+            const unsigned long parsed = std::strtoul(requested_device_.c_str(), nullptr, 10);
+            if (parsed != 0)
+                type = SDL_GetGamepadTypeForID(static_cast<SDL_JoystickID>(parsed));
+        } else {
+            int count = 0;
+            SDL_JoystickID *ids = SDL_GetGamepads(&count);
+            if (ids && count > 0)
+                type = SDL_GetGamepadTypeForID(ids[0]);
+            SDL_free(ids);
+        }
+        options.profile = visual_profile_from_type(type);
+    }
     options.face_buttons = resolved_face_button_labels();
+    // A manually selected visual family should be coherent even when the
+    // device is exposed by its driver as a virtual Xbox controller.
+    // An explicit face-label override still takes precedence.
+    if (face_button_labels_mode_ == "auto" && universal_visual_profile_ != "auto") {
+        if (options.profile == ControllerVisualProfile::PlayStationLike)
+            options.face_buttons = playstation_face_button_labels();
+        else if (options.profile == ControllerVisualProfile::NintendoLike)
+            options.face_buttons = nintendo_face_button_labels();
+        else if (options.profile == ControllerVisualProfile::XboxLike)
+            options.face_buttons = xbox_face_button_labels();
+    }
     return options;
 }
 
@@ -1264,6 +1391,7 @@ void GamepadSource::update(obs_data_t *settings)
     input_overlay_image_path_ = new_input_overlay_image;
     gamepadviewer_css_path_ = new_gamepadviewer_css;
     hide_disconnected_ = obs_data_get_bool(settings, "hide_disconnected");
+    high_res_canvas_output_ = obs_data_get_bool(settings, "high_res_canvas_output");
     const bool new_polling = obs_data_get_bool(settings, "polling_enabled");
     deadzone_ = std::clamp(static_cast<float>(obs_data_get_int(settings, "deadzone")) / 100.0F,
                            0.0F, 0.5F);
@@ -1294,6 +1422,15 @@ void GamepadSource::update(obs_data_t *settings)
     else
         universal_service_buttons_ = "auto";
 
+    const char *visual_profile = obs_data_get_string(settings, "universal_visual_profile");
+    const std::string new_visual_profile = visual_profile && *visual_profile ? visual_profile : "auto";
+    if (new_visual_profile == "auto" || new_visual_profile == "generic" ||
+        new_visual_profile == "xbox" || new_visual_profile == "playstation" ||
+        new_visual_profile == "nintendo")
+        universal_visual_profile_ = new_visual_profile;
+    else
+        universal_visual_profile_ = "auto";
+
     const char *face_labels = obs_data_get_string(settings, "face_button_labels");
     const std::string new_face_labels = face_labels && *face_labels ? face_labels : "auto";
     if (new_face_labels == "auto" || new_face_labels == "xbox" ||
@@ -1317,6 +1454,21 @@ void GamepadSource::update(obs_data_t *settings)
     if (skin_changed)
         load_selected_skin(skin_id_, custom_skin_path_, input_overlay_config_path_,
                            input_overlay_image_path_, gamepadviewer_css_path_);
+
+    // High-resolution test: fix the OBS logical canvas at 1120x640 across
+    // skin families. The technical skin already has a native 1120x640 raster;
+    // imported skins keep their own native atlas/CSS coordinates in canvas_.
+    // Legacy behavior remains untouched with this option disabled.
+    if (high_res_canvas_output_) {
+        output_width_.store(kUniversalRenderWidth, std::memory_order_relaxed);
+        output_height_.store(kUniversalRenderHeight, std::memory_order_relaxed);
+    } else if (render_mode_ == RenderMode::Universal) {
+        output_width_.store(kUniversalSkinWidth, std::memory_order_relaxed);
+        output_height_.store(kUniversalSkinHeight, std::memory_order_relaxed);
+    } else {
+        output_width_.store(canvas_.width(), std::memory_order_relaxed);
+        output_height_.store(canvas_.height(), std::memory_order_relaxed);
+    }
 
     texture_dirty_ = true;
     has_last_state_ = false;
@@ -1616,7 +1768,29 @@ void GamepadSource::render()
     if (!texture_)
         return;
 
-    obs_source_draw(texture_, 0, 0, width, height, false);
+    const uint32_t output_width = output_width_.load(std::memory_order_relaxed);
+    const uint32_t output_height = output_height_.load(std::memory_order_relaxed);
+
+    if (high_res_canvas_output_ && render_mode_ != RenderMode::Universal &&
+        width > 0 && height > 0 && output_width > 0 && output_height > 0) {
+        // Fit the complete imported texture inside a common 1120x640 source,
+        // maintaining its native rendering resolution and aspect ratio.
+        // Letterbox margins remain transparent; neither artwork nor JSON/CSS
+        // coordinates are reduced to 560x320 on the CPU.
+        const double scale = std::min(static_cast<double>(output_width) / width,
+                                      static_cast<double>(output_height) / height);
+        const uint32_t fitted_width = std::min(
+            output_width, std::max(1u, static_cast<uint32_t>(std::lround(width * scale))));
+        const uint32_t fitted_height = std::min(
+            output_height, std::max(1u, static_cast<uint32_t>(std::lround(height * scale))));
+        const int x = static_cast<int>((output_width - fitted_width) / 2);
+        const int y = static_cast<int>((output_height - fitted_height) / 2);
+        obs_source_draw(texture_, x, y, fitted_width, fitted_height, false);
+    } else {
+        // Technical 2x texture is drawn 1:1 in the HD experiment, retaining
+        // every raster pixel. Legacy mode retains 560x320 logical dimensions.
+        obs_source_draw(texture_, 0, 0, output_width, output_height, false);
+    }
 }
 
 static const char *get_name(void *)

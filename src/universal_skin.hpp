@@ -28,7 +28,15 @@ struct FaceButtonLabels {
     FaceButtonGlyph north = FaceButtonGlyph::Y;
 };
 
+enum class ControllerVisualProfile {
+    Generic,
+    XboxLike,
+    PlayStationLike,
+    NintendoLike,
+};
+
 struct UniversalSkinOptions {
+    ControllerVisualProfile profile = ControllerVisualProfile::Generic;
     bool show_back = true;
     bool show_start = true;
     bool show_guide = true;
@@ -37,8 +45,13 @@ struct UniversalSkinOptions {
     FaceButtonLabels face_buttons{};
 };
 
+// Keep OBS source dimensions stable so saved scene transforms do not change.
+// The actual texture is rendered at 2x for more detail at normal preview sizes.
 constexpr uint32_t kUniversalSkinWidth = 560;
 constexpr uint32_t kUniversalSkinHeight = 320;
+constexpr uint32_t kUniversalRenderScale = 2;
+constexpr uint32_t kUniversalRenderWidth = kUniversalSkinWidth * kUniversalRenderScale;
+constexpr uint32_t kUniversalRenderHeight = kUniversalSkinHeight * kUniversalRenderScale;
 constexpr uint32_t kErrorSkinWidth = 640;
 constexpr uint32_t kErrorSkinHeight = 220;
 

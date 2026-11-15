@@ -3,9 +3,7 @@
 
 #include "gamepadviewer_skin.hpp"
 #include "svg_rasterizer.hpp"
-
-#include <graphics/image-file.h>
-#include <obs-module.h>
+#include "wic_image_decoder.hpp"
 
 #include <algorithm>
 #include <array>
@@ -770,50 +768,13 @@ bool local_asset_path(const std::filesystem::path &root, const std::string &refe
     return true;
 }
 
+// Decode local GamepadViewer PNG/JPEG assets with Windows Imaging Component.
+// Unlike OBS's gs_image_file helper, WIC does not couple our DLL to the
+// changed image-file ABI in OBS Studio 33. PixelCanvas expects straight RGBA.
 bool load_bitmap(const std::string &path, GpvRasterImage &image, std::string &error)
 {
-    gs_image_file_t decoded{};
-    gs_image_file_init(&decoded, path.c_str());
-    if (!decoded.loaded || !decoded.texture_data || decoded.cx == 0 || decoded.cy == 0) {
-        obs_enter_graphics();
-        gs_image_file_free(&decoded);
-        obs_leave_graphics();
-        error = "Image could not be decoded";
-        return false;
-    }
-    if (decoded.cx > kMaxDimension || decoded.cy > kMaxDimension ||
-        static_cast<uint64_t>(decoded.cx) * decoded.cy * 4ULL > kMaxPixelBytes) {
-        obs_enter_graphics();
-        gs_image_file_free(&decoded);
-        obs_leave_graphics();
-        error = "Image is too large";
-        return false;
-    }
-
-    image.width = decoded.cx;
-    image.height = decoded.cy;
-    const size_t pixels = static_cast<size_t>(decoded.cx) * decoded.cy;
-    image.rgba.resize(pixels * 4U);
-    if (decoded.format == GS_RGBA) {
-        std::copy_n(decoded.texture_data, pixels * 4U, image.rgba.data());
-    } else if (decoded.format == GS_BGRA) {
-        for (size_t i = 0; i < pixels; ++i) {
-            image.rgba[i * 4U + 0] = decoded.texture_data[i * 4U + 2];
-            image.rgba[i * 4U + 1] = decoded.texture_data[i * 4U + 1];
-            image.rgba[i * 4U + 2] = decoded.texture_data[i * 4U + 0];
-            image.rgba[i * 4U + 3] = decoded.texture_data[i * 4U + 3];
-        }
-    } else {
-        obs_enter_graphics();
-        gs_image_file_free(&decoded);
-        obs_leave_graphics();
-        error = "Image pixel format is unsupported";
-        return false;
-    }
-    obs_enter_graphics();
-    gs_image_file_free(&decoded);
-    obs_leave_graphics();
-    return true;
+    return decode_image_file_rgba_wic(path, kMaxDimension, kMaxPixelBytes,
+                                      image.width, image.height, image.rgba, error);
 }
 
 bool load_image(const std::filesystem::path &path, GpvRasterImage &image, std::string &error)

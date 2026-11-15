@@ -74,6 +74,35 @@ function Copy-CommonDocuments {
     Copy-Item -LiteralPath (Join-Path $sourceRoot "data\THIRD-PARTY-NOTICES.txt") -Destination $dataDestination -Force
 }
 
+# OBS 33 Plugin Manager reads the version from manifest.json in the
+# module's data directory. Generate it from VERSION for every package layout.
+# The plugin DLL already logs the build version; this adds manager metadata.
+function Write-ModuleManifest {
+    param([Parameter(Mandatory = $true)][string]$DataDirectory)
+
+    New-Item -ItemType Directory -Path $DataDirectory -Force | Out-Null
+    $manifest = [ordered]@{
+        id = $pluginName
+        display_name = "Mugen Gamepad Overlay"
+        name = "Mugen Gamepad Overlay"
+        version = $version
+        description = "Local SDL3 gamepad overlay source for OBS Studio"
+        urls = [ordered]@{
+            repository = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
+            website = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay"
+            support = "https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues"
+        }
+        has_icon = $false
+        has_banner = $false
+    }
+    $manifestPath = Join-Path $DataDirectory "manifest.json"
+    [System.IO.File]::WriteAllText(
+        $manifestPath,
+        ($manifest | ConvertTo-Json -Depth 5),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+}
+
 function New-ZipFromDirectory {
     param([string]$SourceDirectory, [string]$ZipPath)
     if (Test-Path -LiteralPath $ZipPath) {
@@ -98,13 +127,16 @@ Reset-Directory $releaseRoot
 Reset-Directory $workRoot
 
 try {
-    # Standard all-users layout: extract the ZIP into ProgramData\obs-studio\plugins.
+    # Standard ProgramData ZIP includes both OBS 33 and OBS 32 layouts.
     $standardPlugin = Join-Path $standardStage $pluginName
     New-Item -ItemType Directory -Path (Join-Path $standardPlugin "bin\64bit") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $standardPlugin "data\locale") -Force | Out-Null
     Copy-Item -LiteralPath $dll -Destination (Join-Path $standardPlugin "bin\64bit\mugen-gamepad-overlay.dll") -Force
+    # OBS 33+ native location. Keep bin\64bit for OBS 32 compatibility.
+    Copy-Item -LiteralPath $dll -Destination (Join-Path $standardPlugin "$pluginName.dll") -Force
     Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $standardPlugin "data\locale") -Force
     Copy-CommonDocuments -Destination $standardPlugin
+    Write-ModuleManifest -DataDirectory (Join-Path $standardPlugin "data")
 
     # Portable/custom OBS layout: extract the ZIP into the OBS root directory.
     $portableData = Join-Path $portableStage "data\obs-plugins\$pluginName"
@@ -113,14 +145,27 @@ try {
     Copy-Item -LiteralPath $dll -Destination (Join-Path $portableStage "obs-plugins\64bit\mugen-gamepad-overlay.dll") -Force
     Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $portableData "locale") -Force
     Copy-CommonDocuments -Destination $portableData
+    Write-ModuleManifest -DataDirectory $portableData
+    # OBS 33+ portable installs third-party plugins under plugins/<name>.
+    # Keep the legacy obs-plugins/data layout so this *same ZIP* also loads
+    # on OBS 32. OBS 33 loads the new copy first and ignores the legacy one.
+    $portableModern = Join-Path $portableStage "plugins\$pluginName"
+    New-Item -ItemType Directory -Path (Join-Path $portableModern "data\locale") -Force | Out-Null
+    Copy-Item -LiteralPath $dll -Destination (Join-Path $portableModern "$pluginName.dll") -Force
+    Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $portableModern "data\locale") -Force
+    Copy-CommonDocuments -Destination $portableModern
+    Write-ModuleManifest -DataDirectory (Join-Path $portableModern "data")
 
     # Installer payload mirrors the recommended ProgramData plugin folder.
     $payloadPlugin = Join-Path $payloadStage $pluginName
     New-Item -ItemType Directory -Path (Join-Path $payloadPlugin "bin\64bit") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $payloadPlugin "data\locale") -Force | Out-Null
     Copy-Item -LiteralPath $dll -Destination (Join-Path $payloadPlugin "bin\64bit\mugen-gamepad-overlay.dll") -Force
+    # Inno Setup installs both layouts to support OBS 32 and OBS 33.
+    Copy-Item -LiteralPath $dll -Destination (Join-Path $payloadPlugin "$pluginName.dll") -Force
     Copy-Item -Path (Join-Path $localeSource "*") -Destination (Join-Path $payloadPlugin "data\locale") -Force
     Copy-CommonDocuments -Destination $payloadPlugin
+    Write-ModuleManifest -DataDirectory (Join-Path $payloadPlugin "data")
 
     $standardZip = Join-Path $releaseRoot "Mugen-Gamepad-Overlay-$version-Windows-x64.zip"
     $portableZip = Join-Path $releaseRoot "Mugen-Gamepad-Overlay-$version-Windows-x64-portable.zip"

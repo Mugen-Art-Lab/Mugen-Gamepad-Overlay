@@ -6,7 +6,11 @@ Mugen Gamepad Overlay @VERSION@
 4. Встроенный универсальный скин работает без дополнительных файлов.
 5. Скины Input Overlay и GamepadViewer скачиваются отдельно.
 
-Документация:
+Официальный сайт и обратная связь:
+https://mugenartlab.com/
+Для сообщения об ошибке или идеи выберите на сайте «Написать».
+
+Документация, исходники и Issues:
 https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay
 
 ЛИЦЕНЗИЯ

@@ -71,6 +71,18 @@ jobs:
           Write-Host "Validated release assets:" -ForegroundColor Green
           Get-ChildItem -LiteralPath $releaseDir -File | Sort-Object Name | Format-Table Name, Length
 
+      - name: Verify OBS 32/33 DLL imports and plugin manager metadata
+        shell: pwsh
+        run: |
+          $version = (Get-Content -LiteralPath ".\VERSION" -Raw).Trim()
+          $releaseDir = Join-Path $env:BUILD_WORKSPACE ("release\" + $version)
+          $standardZip = Join-Path $releaseDir "Mugen-Gamepad-Overlay-$version-Windows-x64.zip"
+          $portableZip = Join-Path $releaseDir "Mugen-Gamepad-Overlay-$version-Windows-x64-portable.zip"
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\qa-tests\test-obs32-33-imports.ps1" -StandardZip $standardZip
+          if ($LASTEXITCODE -ne 0) { throw "OBS 32/33 DLL import validation failed" }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\qa-tests\test-package-metadata.ps1" -StandardZip $standardZip -PortableZip $portableZip -Version $version
+          if ($LASTEXITCODE -ne 0) { throw "OBS plugin metadata validation failed" }
+
       - name: Upload release assets
         uses: actions/upload-artifact@v7
         with:

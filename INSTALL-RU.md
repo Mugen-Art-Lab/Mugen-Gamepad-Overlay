@@ -5,7 +5,7 @@
 ## Рекомендуемый установщик
 
 1. Полностью закройте OBS Studio.
-2. Запустите `Mugen-Gamepad-Overlay-0.8.1-Windows-x64-Setup.exe`.
+2. Запустите `Mugen-Gamepad-Overlay-0.8.2-Windows-x64-Setup.exe`.
 3. Подтвердите запрос прав администратора Windows.
 4. Запустите OBS Studio.
 5. Добавьте источник **Mugen Gamepad Overlay**.
@@ -14,36 +14,54 @@
 
 `C:\ProgramData\obs-studio\plugins\mugen-gamepad-overlay`
 
+Для совместимости с OBS 32 и OBS 33 установщик включает **две одинаковые DLL** в разных местах:
+
+```text
+C:\ProgramData\obs-studio\plugins\mugen-gamepad-overlay\
+  mugen-gamepad-overlay.dll             (новый формат OBS 33+)
+  bin\64bit\mugen-gamepad-overlay.dll  (старый формат OBS 32)
+  data\locale\...
+```
+
+OBS 33 сначала загружает новый вариант и игнорирует старую копию, если загрузка прошла успешно. Поэтому предупреждение «Устаревший» должно исчезнуть, но поддержка OBS 32 сохранится. Не удаляйте старую копию вручную, если ещё используете OBS 32.
+
 Установщик пока не имеет цифровой подписи, поэтому Windows SmartScreen может показать предупреждение о неизвестном издателе. Скачивайте релизные файлы только из репозитория Mugen Art Lab на GitHub; при необходимости сверяйте SHA-256 с `SHA256SUMS.txt`.
 
 Для обновления полностью закройте OBS Studio и запустите новый установщик. Настройки источника сохраняются в коллекции сцен OBS. Для удаления воспользуйтесь разделом **Установленные приложения** Windows.
 
+Для обратной связи, вопросов и идей можно открыть [сайт Mugen Art Lab](https://mugenartlab.com/) и выбрать **«Написать»**. Воспроизводимые технические ошибки также принимаются через [GitHub Issues](https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay/issues).
+
+### Переключение скинов без изменения размеров источника OBS
+
+В свойствах источника включите **«Единый размер источника для всех скинов (1120×640)»**, чтобы использовать одну рамку при переключении встроенного скина, Input Overlay и GamepadViewer. После включения **один раз** подстройте масштаб или положение источника на сцене OBS. По умолчанию настройка выключена для сохранения старых сцен; при выключенной опции импортированные скины имеют собственные размеры.
+
 ## Стандартный ZIP
 
-Распакуйте содержимое `Mugen-Gamepad-Overlay-0.8.1-Windows-x64.zip` в:
+Распакуйте содержимое `Mugen-Gamepad-Overlay-0.8.2-Windows-x64.zip` в:
 
 `C:\ProgramData\obs-studio\plugins`
 
-Итоговый путь к DLL должен быть:
+Оба файла DLL должны находиться по указанным выше путям, чтобы плагин работал в OBS 32 и OBS 33. Для удаления ручной установки полностью закройте OBS Studio и удалите папку `mugen-gamepad-overlay`.
 
-`C:\ProgramData\obs-studio\plugins\mugen-gamepad-overlay\bin\64bit\mugen-gamepad-overlay.dll`
+## ZIP для portable OBS
 
-Для ручного удаления полностью закройте OBS Studio и удалите папку `mugen-gamepad-overlay`.
+Закройте OBS Studio и распакуйте `Mugen-Gamepad-Overlay-0.8.2-Windows-x64-portable.zip` в **корневую папку portable OBS**.
 
-## ZIP для portable или нестандартной OBS
-
-Закройте OBS Studio и распакуйте `Mugen-Gamepad-Overlay-0.8.1-Windows-x64-portable.zip` в корневую папку portable или нестандартной установки OBS. В архиве находятся папки `obs-plugins` и `data`.
-
-Для ручного удаления удалите:
+Архив содержит новый формат OBS 33+ и старый формат OBS 32:
 
 ```text
+plugins\mugen-gamepad-overlay\mugen-gamepad-overlay.dll
+plugins\mugen-gamepad-overlay\data\locale\...
 obs-plugins\64bit\mugen-gamepad-overlay.dll
-data\obs-plugins\mugen-gamepad-overlay
+data\obs-plugins\mugen-gamepad-overlay\locale\...
 ```
+
+При ручном удалении закройте OBS и удалите именно четыре пути плагина, а не общие папки `plugins`, `obs-plugins` или `data`. Portable-архив не заменяет стандартную установку в ProgramData.
 
 ## Если источник не появился
 
-- убедитесь, что OBS Studio была полностью закрыта во время установки, обновления или удаления;
-- проверьте, что Windows и OBS Studio имеют архитектуру x64;
-- откройте **Справка → Файлы журнала → Просмотреть текущий журнал** и найдите `Mugen Gamepad Overlay` или `mugen-gamepad-overlay.dll`;
-- при сообщении об ошибке приложите версию OBS, версию Windows, способ установки, название и режим подключения контроллера, а также текущий журнал.
+- Убедитесь, что OBS Studio была полностью закрыта во время установки, обновления или удаления.
+- Проверьте, что Windows и OBS Studio имеют архитектуру x64.
+- В OBS 33 после установки в новый формат пометка «Устаревший» должна исчезнуть. OBS 32 использует старую копию DLL.
+- Откройте **Справка → Файлы журнала → Просмотреть текущий журнал** и найдите `Mugen Gamepad Overlay` или `mugen-gamepad-overlay.dll`.
+- При сообщении об ошибке приложите версию OBS, версию Windows, способ установки, название и режим подключения контроллера, а также текущий журнал.

@@ -69,6 +69,7 @@ private:
 
     std::string requested_device_ = "auto";
     std::string skin_id_;
+    bool high_res_canvas_output_ = false; // opt-in: 1120x640 canvas across skin families
     std::string custom_skin_path_;
     std::string input_overlay_config_path_;
     std::string input_overlay_variant_path_;
@@ -86,6 +87,7 @@ private:
     float gamepadviewer_trigger_threshold_ = 0.35F;
     float trigger_button_threshold_ = 0.35F;
     std::string universal_service_buttons_ = "auto";
+    std::string universal_visual_profile_ = "auto";
     std::string face_button_labels_mode_ = "auto";
     bool has_back_ = true;
     bool has_start_ = true;

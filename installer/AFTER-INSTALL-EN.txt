@@ -6,7 +6,11 @@ Mugen Gamepad Overlay @VERSION@
 4. The built-in universal skin works without additional files.
 5. Input Overlay and GamepadViewer skins are downloaded separately.
 
-Documentation:
+Official website and feedback:
+https://mugenartlab.com/
+To report a problem or share an idea, choose "Write" on the website.
+
+Documentation, source code and Issues:
 https://github.com/Mugen-Art-Lab/Mugen-Gamepad-Overlay
 
 LICENSE
